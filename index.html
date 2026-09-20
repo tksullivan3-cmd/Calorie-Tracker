@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pocket Macro & Calorie Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="theme-color" content="#10b981">
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans pb-20">
+
+    <!-- Top Navigation & Device Mode Switcher -->
+    <header class="bg-emerald-600 text-white p-3 shadow-md sticky top-0 z-50">
+        <div id="mainHeaderContainer" class="max-w-md mx-auto flex justify-between items-center transition-all duration-300">
+            <h1 class="text-base font-bold flex items-center space-x-1">
+                <span>🔥 Macro Tracker</span>
+                <span id="modeBadge" class="text-[10px] bg-emerald-700 px-1.5 py-0.5 rounded uppercase tracking-wider opacity-90">Mobile</span>
+            </h1>
+            <div class="flex items-center space-x-1">
+                <!-- Device Mode Toggle -->
+                <button onclick="setDeviceMode('mobile')" id="btnDevMobile" class="text-xs bg-emerald-900 px-2 py-1 rounded transition font-bold">📱 Mobile</button>
+                <button onclick="setDeviceMode('desktop')" id="btnDevDesktop" class="text-xs bg-emerald-700 px-2 py-1 rounded transition opacity-80">💻 Desktop</button>
+                <span class="text-emerald-400 mx-1">|</span>
+                <button onclick="switchTab('today')" id="btnToday" class="text-xs bg-emerald-700 px-2 py-1 rounded transition font-semibold">Today</button>
+                <button onclick="switchTab('library')" id="btnLibrary" class="text-xs bg-emerald-800 px-2 py-1 rounded transition opacity-80">Foods</button>
+                <button onclick="switchTab('meals')" id="btnMeals" class="text-xs bg-emerald-800 px-2 py-1 rounded transition opacity-80">Meals</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="appWrapper" class="max-w-md mx-auto p-4 space-y-4 transition-all duration-300">
+
+        <!-- ================= TODAY VIEW ================= -->
+        <div id="viewToday" class="space-y-4">
+            <!-- Summary Card -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Daily Calories</p>
+                        <div class="flex items-center space-x-2">
+                            <span id="goalDisplay" class="text-lg font-bold">2000</span>
+                            <span class="text-xs text-gray-400">kcal</span>
+                            <button onclick="editGoals()" class="text-emerald-600 text-xs underline">Edit Goals</button>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Remaining</p>
+                        <span id="remainingDisplay" class="text-2xl font-black text-emerald-600">2000</span>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="w-full bg-gray-100 h-3 rounded-full overflow-hidden">
+                    <div id="progressBar" class="bg-emerald-500 h-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+
+                <!-- Macros Summary Row -->
+                <div class="grid grid-cols-3 gap-2 pt-2 text-center border-t border-gray-50">
+                    <div class="bg-gray-50 p-2 rounded-xl">
+                        <p class="text-[10px] text-gray-400 uppercase">Protein</p>
+                        <p id="sumProtein" class="text-sm font-bold text-gray-700">0g</p>
+                        <p class="text-[9px] text-gray-400">Goal: <span id="goalProteinDisplay">150</span>g</p>
+                    </div>
+                    <div class="bg-gray-50 p-2 rounded-xl">
+                        <p class="text-[10px] text-gray-400 uppercase">Carbs</p>
+                        <p id="sumCarbs" class="text-sm font-bold text-gray-700">0g</p>
+                        <p class="text-[9px] text-gray-400">Total</p>
+                    </div>
+                    <div class="bg-gray-50 p-2 rounded-xl">
+                        <p class="text-[10px] text-gray-400 uppercase">Fats</p>
+                        <p id="sumFats" class="text-sm font-bold text-gray-700">0g</p>
+                        <p class="text-[9px] text-gray-400">Total</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Log Food / Meal Form -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                <h2 class="text-sm font-bold text-gray-700 mb-3">Log Food or Meal</h2>
+                <form id="logForm" onsubmit="logItem(event)" class="space-y-3">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Type</label>
+                            <select id="logType" onchange="updateLogDropdown()" class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:border-emerald-500">
+                                <option value="food">Saved Food</option>
+                                <option value="meal">Saved Meal</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Meal Time</label>
+                            <select id="mealType" class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:border-emerald-500">
+                                <option value="Breakfast">Breakfast</option>
+                                <option value="Lunch">Lunch</option>
+                                <option value="Dinner">Dinner</option>
+                                <option value="Snack">Snack</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label id="logSelectLabel" class="block text-xs font-semibold text-gray-600 mb-1">Select Food</label>
+                        <select id="selectLogItem" onchange="updatePortionLabel()" class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:border-emerald-500">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+
+                    <div>
+                        <label id="portionLabel" class="block text-xs font-semibold text-gray-600 mb-1">Amount</label>
+                        <input type="number" id="foodAmount" value="100" step="any" required min="0.1"
+                            class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-500">
+                    </div>
+
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl shadow-md transition text-sm">
+                        Add to Today's Log
+                    </button>
+                </form>
+            </div>
+
+            <!-- Today's Log List -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-sm font-bold text-gray-700">Today's Log</h2>
+                    <button onclick="resetDay()" class="text-xs text-red-500 underline">Clear Today</button>
+                </div>
+                <div id="foodList" class="space-y-2.5">
+                    <!-- Dynamic items -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= FOOD LIBRARY VIEW ================= -->
+        <div id="viewLibrary" class="space-y-4 hidden">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 id="foodFormTitle" class="text-sm font-bold text-gray-700">Create / Save New Food</h2>
+                    <button id="cancelEditFoodBtn" type="button" onclick="cancelEditFood()" class="text-xs text-red-500 underline hidden">Cancel Edit</button>
+                </div>
+                
+                <!-- Input Mode Toggle (Absolute Values vs % Daily Value) -->
+                <div class="mb-4 bg-emerald-50 p-2.5 rounded-xl border border-emerald-100 flex justify-between items-center">
+                    <span class="text-xs font-bold text-emerald-900">Vitamins & Minerals Input Mode:</span>
+                    <div class="flex space-x-1">
+                        <button type="button" onclick="setVitInputMode('absolute')" id="btnModeAbs" class="text-xs px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-semibold transition">Absolute (mg/ug)</button>
+                        <button type="button" onclick="setVitInputMode('percent')" id="btnModePct" class="text-xs px-2.5 py-1 rounded-lg bg-white text-emerald-700 font-semibold border border-emerald-200 transition">Canadian % DV</button>
+                    </div>
+                </div>
+
+                <form id="saveFoodForm" onsubmit="saveCustomFood(event)" class="space-y-3">
+                    <input type="hidden" id="editFoodId" value="">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Food Name</label>
+                        <input type="text" id="newName" placeholder="e.g. Cremini Mushrooms" required
+                            class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-500">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Base Unit</label>
+                            <input type="text" id="newUnit" value="g" required
+                                class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Base Quantity</label>
+                            <input type="number" id="newBaseQty" value="100" step="any" required
+                                class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Calories (kcal) *</label>
+                            <input type="number" id="newCal" step="any" required value="0"
+                                class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Protein (g)</label>
+                            <input type="number" id="newProtein" step="any" value="0"
+                                class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+
+                    <!-- Carbs & Nested Fibers / Sugars -->
+                    <div class="pt-2 border-t border-gray-100 space-y-2">
+                        <p class="text-xs font-semibold text-gray-700">Carbohydrates</p>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div>
+                                <label class="block text-[10px] text-gray-500 mb-0.5">Total Carbs (g)</label>
+                                <input type="number" id="newCarbs" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-gray-500 mb-0.5">↳ Fiber (g)</label>
+                                <input type="number" id="newFiber" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-gray-500 mb-0.5">↳ Sugars (g)</label>
+                                <input type="number" id="newSugars" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fats Breakdown -->
+                    <div class="pt-2 border-t border-gray-100 space-y-2">
+                        <p class="text-xs font-semibold text-gray-700">Fats Breakdown</p>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div>
+                                <label class="block text-[10px] text-gray-500 mb-0.5">Total Fats (g)</label>
+                                <input type="number" id="newFats" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-gray-500 mb-0.5">↳ Saturated (g)</label>
+                                <input type="number" id="newSatFat" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-gray-500 mb-0.5">↳ Trans (g)</label>
+                                <input type="number" id="newTransFat" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] text-gray-500 mb-0.5">↳ Polyunsaturated (g)</label>
+                                <input type="number" id="newPolyFat" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-gray-500 mb-0.5">↳ Monosaturated (g)</label>
+                                <input type="number" id="newMonoFat" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 pl-3 border-l-2 border-emerald-100 ml-1">
+                            <div>
+                                <label class="block text-[10px] text-gray-400 mb-0.5">↳ Omega 6 (g)</label>
+                                <input type="number" id="newOmega6" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-gray-400 mb-0.5">↳ Omega 3 (g)</label>
+                                <input type="number" id="newOmega3" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cholesterol & Sodium -->
+                    <div class="pt-2 border-t border-gray-100 space-y-2">
+                        <p class="text-xs font-semibold text-gray-700">Cholesterol & Sodium</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] text-gray-500 mb-0.5">Cholesterol (mg)</label>
+                                <input type="number" id="newCholesterol" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-gray-500 mb-0.5">Sodium (mg)</label>
+                                <input type="number" id="newSodium" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vitamins & Minerals Category -->
+                    <div class="pt-2 border-t border-gray-100 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <p class="text-xs font-semibold text-gray-700">Vitamins & Minerals</p>
+                            <span id="vitModeIndicator" class="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded">Units: mg/ug</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div>
+                                <label id="lblPotassium" class="block text-[10px] text-gray-500 mb-0.5">Potassium (mg)</label>
+                                <input type="number" id="newPotassium" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                            </div>
+                            <div>
+                                <label id="lblCalcium" class="block text-[10px] text-gray-500 mb-0.5">Calcium (mg)</label>
+                                <input type="number" id="newCalcium" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                            </div>
+                            <div>
+                                <label id="lblIron" class="block text-[10px] text-gray-500 mb-0.5">Iron (mg)</label>
+                                <input type="number" id="newIron" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                            </div>
+                        </div>
+
+                        <!-- Expandable Extra Minerals/Vitamins in Creator -->
+                        <button type="button" onclick="toggleExpand('creatorExtraVits')" class="text-emerald-600 font-semibold underline text-[11px]">More Vitamins & Minerals ▾</button>
+                        <div id="creatorExtraVits" class="hidden space-y-2 pt-1">
+                            <div class="grid grid-cols-3 gap-2">
+                                <div>
+                                    <label id="lblVitA" class="block text-[10px] text-gray-500 mb-0.5">Vitamin A (ug)</label>
+                                    <input type="number" id="newVitA" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                                </div>
+                                <div>
+                                    <label id="lblVitC" class="block text-[10px] text-gray-500 mb-0.5">Vitamin C (mg)</label>
+                                    <input type="number" id="newVitC" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                                </div>
+                                <div>
+                                    <label id="lblVitD" class="block text-[10px] text-gray-500 mb-0.5">Vitamin D (ug)</label>
+                                    <input type="number" id="newVitD" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div>
+                                    <label id="lblVitE" class="block text-[10px] text-gray-500 mb-0.5">Vitamin E (mg)</label>
+                                    <input type="number" id="newVitE" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                                </div>
+                                <div>
+                                    <label id="lblThiamine" class="block text-[10px] text-gray-500 mb-0.5">Thiamine (mg)</label>
+                                    <input type="number" id="newThiamine" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                                </div>
+                                <div>
+                                    <label id="lblRiboflavin" class="block text-[10px] text-gray-500 mb-0.5">Riboflavin (mg)</label>
+                                    <input type="number" id="newRiboflavin" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div>
+                                    <label id="lblNiacin" class="block text-[10px] text-gray-500 mb-0.5">Niacin (mg)</label>
+                                    <input type="number" id="newNiacin" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                                </div>
+                                <div>
+                                    <label id="lblVitB6" class="block text-[10px] text-gray-500 mb-0.5">Vitamin B₆ (mg)</label>
+                                    <input type="number" id="newVitB6" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                                </div>
+                                <div>
+                                    <label id="lblVitB12" class="block text-[10px] text-gray-500 mb-0.5">Vitamin B₁₂ (ug)</label>
+                                    <input type="number" id="newVitB12" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div>
+                                    <label id="lblFolate" class="block text-[10px] text-gray-500 mb-0.5">Folate (ug)</label>
+                                    <input type="number" id="newFolate" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                                </div>
+                                <div>
+                                    <label id="lblPantothenate" class="block text-[10px] text-gray-500 mb-0.5">Pantothenate (mg)</label>
+                                    <input type="number" id="newPantothenate" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                                </div>
+                                <div>
+                                    <label id="lblPhosphorus" class="block text-[10px] text-gray-500 mb-0.5">Phosphorus (mg)</label>
+                                    <input type="number" id="newPhosphorus" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div>
+                                    <label id="lblMagnesium" class="block text-[10px] text-gray-500 mb-0.5">Magnesium (mg)</label>
+                                    <input type="number" id="newMagnesium" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                                </div>
+                                <div>
+                                    <label id="lblZinc" class="block text-[10px] text-gray-500 mb-0.5">Zinc (mg)</label>
+                                    <input type="number" id="newZinc" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                                </div>
+                                <div>
+                                    <label id="lblSelenium" class="block text-[10px] text-gray-500 mb-0.5">Selenium (ug)</label>
+                                    <input type="number" id="newSelenium" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div>
+                                    <label id="lblCopper" class="block text-[10px] text-gray-500 mb-0.5">Copper (mg)</label>
+                                    <input type="number" id="newCopper" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                                </div>
+                                <div>
+                                    <label id="lblManganese" class="block text-[10px] text-gray-500 mb-0.5">Manganese (mg)</label>
+                                    <input type="number" id="newManganese" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                                </div>
+                                <div>
+                                    <label id="lblMolybdenum" class="block text-[10px] text-gray-500 mb-0.5">Molybdenum (ug)</label>
+                                    <input type="number" id="newMolybdenum" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div>
+                                    <label id="lblBiotin" class="block text-[10px] text-gray-500 mb-0.5">Biotin (ug)</label>
+                                    <input type="number" id="newBiotin" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="saveFoodBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl shadow-md transition text-sm mt-4">
+                        Save to Food Library
+                    </button>
+                </form>
+            </div>
+
+            <!-- Library List -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-sm font-bold text-gray-700">Saved Foods</h2>
+                    <!-- Display mode toggle for library listing -->
+                    <div class="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+                        <button type="button" onclick="setLibDisplayMode('units')" id="libBtnUnits" class="text-[10px] px-2 py-0.5 rounded bg-white font-semibold shadow-sm transition">Units</button>
+                        <button type="button" onclick="setLibDisplayMode('percent')" id="libBtnPercent" class="text-[10px] px-2 py-0.5 rounded text-gray-600 font-semibold transition">% DV</button>
+                    </div>
+                </div>
+                <div id="libraryList" class="space-y-2.5">
+                    <!-- Dynamic library items -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= MEALS VIEW ================= -->
+        <div id="viewMeals" class="space-y-4 hidden">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                <h2 class="text-sm font-bold text-gray-700 mb-3">Create Custom Meal / Recipe</h2>
+                <form id="saveMealForm" onsubmit="saveCustomMeal(event)" class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Meal Name</label>
+                        <input type="text" id="mealNameInput" placeholder="e.g. Mushroom Bowl" required
+                            class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-500">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Total Portion Unit</label>
+                            <input type="text" id="mealUnitInput" value="g" required
+                                class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Total Portion Size (Base)</label>
+                            <input type="number" id="mealBaseQtyInput" placeholder="e.g. 200" step="any" required
+                                class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 space-y-2">
+                        <label class="block text-xs font-semibold text-gray-700">Add Ingredients from Library</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <select id="mealIngredientSelect" class="w-full px-2 py-2 rounded-lg border border-gray-200 text-xs bg-white">
+                                <!-- Populated dynamically -->
+                            </select>
+                            <input type="number" id="mealIngredientAmount" placeholder="Amount (e.g. 100)" step="any"
+                                class="w-full px-2 py-2 rounded-lg border border-gray-200 text-xs bg-white">
+                        </div>
+                        <button type="button" onclick="addIngredientToMealDraft()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 rounded-lg text-xs transition">
+                            + Add Ingredient to Recipe
+                        </button>
+                    </div>
+
+                    <!-- Draft Ingredients List -->
+                    <div>
+                        <p class="text-xs font-semibold text-gray-600 mb-1">Selected Ingredients:</p>
+                        <div id="draftIngredientsList" class="space-y-1 text-xs text-gray-500 bg-gray-50 p-2.5 rounded-xl border border-gray-100 min-h-[40px]">
+                            <span class="text-gray-400 italic">No ingredients added yet.</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl shadow-md transition text-sm mt-2">
+                        Save Meal Recipe
+                    </button>
+                </form>
+            </div>
+
+            <!-- Saved Meals List -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                <h2 class="text-sm font-bold text-gray-700 mb-3">Saved Meals</h2>
+                <div id="mealsList" class="space-y-2.5">
+                    <!-- Dynamic saved meals -->
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Script Logic -->
+    <script>
+        // Canadian Standard Daily Values (Health Canada Reference Standards)
+        const CANADIAN_DV = {
+            potassium: 4700,    // mg
+            calcium: 1300,      // mg
+            iron: 18,           // mg
+            vitA: 900,          // ug RAE
+            vitC: 90,           // mg
+            vitD: 20,           // ug (800 IU)
+            vitE: 15,           // mg
+            thiamine: 1.2,      // mg
+            riboflavin: 1.3,    // mg
+            niacin: 16,         // mg
+            vitB6: 1.7,         // mg
+            vitB12: 2.4,        // ug
+            folate: 400,        // ug DFE
+            pantothenate: 5,    // mg
+            phosphorus: 1250,   // mg
+            magnesium: 420,     // mg
+            zinc: 11,           // mg
+            selenium: 55,       // ug
+            copper: 0.9,        // mg
+            manganese: 2.3,     // mg
+            molybdenum: 45,     // ug
+            biotin: 30          // ug
+        };
+
+        let state = JSON.parse(localStorage.getItem('macroTrackerState')) || {
+            goal: 2000,
+            goalProtein: 150,
+            deviceMode: 'mobile',
+            vitDisplayMode: 'units', // 'units' or 'percent'
+            library: [
+                {
+                    id: 1, name: "Cremini Mushrooms", unit: "g", baseQty: 100,
+                    calories: 22, protein: 2.5, carbs: 3.3, fiber: 1, sugars: 1.5,
+                    fats: 0.2, satFat: 0, transFat: 0, polyFat: 0.1, omega6: 0.1, omega3: 0, monoFat: 0,
+                    cholesterol: 0, sodium: 5, potassium: 318, calcium: 26, iron: 0.36,
+                    vitA: 0, vitC: 2.1, vitD: 0.2, vitE: 0.1, thiamine: 0.07, riboflavin: 0.32, niacin: 3.5, vitB6: 0.1, vitB12: 0.1, folate: 17, pantothenate: 1.5,
+                    phosphorus: 125, magnesium: 16, zinc: 1.1, selenium: 24.8, copper: 0.3, manganese: 0.1, molybdenum: 0, biotin: 5
+                }
+            ],
+            meals: [],
+            logs: []
+        };
+
+        if (!state.vitDisplayMode) state.vitDisplayMode = 'units';
+        let vitInputMode = 'absolute'; // 'absolute' or 'percent'
+        let currentDraftIngredients = [];
+
+        function saveData() {
+            localStorage.setItem('macroTrackerState', JSON.stringify(state));
+            render();
+        }
+
+        function setDeviceMode(mode) {
+            state.deviceMode = mode;
+            localStorage.setItem('macroTrackerState', JSON.stringify(state));
+            applyDeviceMode();
+        }
+
+        function applyDeviceMode() {
+            const wrapper = document.getElementById('appWrapper');
+            const headerContainer = document.getElementById('mainHeaderContainer');
+            const modeBadge = document.getElementById('modeBadge');
+            const btnMobile = document.getElementById('btnDevMobile');
+            const btnDesktop = document.getElementById('btnDevDesktop');
+
+            if (state.deviceMode === 'desktop') {
+                wrapper.className = "max-w-6xl mx-auto p-6 space-y-6 transition-all duration-300";
+                headerContainer.className = "max-w-6xl mx-auto flex justify-between items-center transition-all duration-300";
+                modeBadge.innerText = "Desktop";
+                btnDesktop.className = "text-xs bg-emerald-900 px-2 py-1 rounded transition font-bold";
+                btnMobile.className = "text-xs bg-emerald-700 px-2 py-1 rounded transition opacity-80";
+            } else {
+                wrapper.className = "max-w-md mx-auto p-4 space-y-4 transition-all duration-300";
+                headerContainer.className = "max-w-md mx-auto flex justify-between items-center transition-all duration-300";
+                modeBadge.innerText = "Mobile";
+                btnMobile.className = "text-xs bg-emerald-900 px-2 py-1 rounded transition font-bold";
+                btnDesktop.className = "text-xs bg-emerald-700 px-2 py-1 rounded transition opacity-80";
+            }
+        }
+
+        function switchTab(tab) {
+            document.getElementById('viewToday').classList.add('hidden');
+            document.getElementById('viewLibrary').classList.add('hidden');
+            document.getElementById('viewMeals').classList.add('hidden');
+            document.getElementById('btnToday').className = "text-xs bg-emerald-800 px-2.5 py-1 rounded transition opacity-80";
+            document.getElementById('btnLibrary').className = "text-xs bg-emerald-800 px-2.5 py-1 rounded transition opacity-80";
+            document.getElementById('btnMeals').className = "text-xs bg-emerald-800 px-2.5 py-1 rounded transition opacity-80";
+
+            if (tab === 'today') {
+                document.getElementById('viewToday').classList.remove('hidden');
+                document.getElementById('btnToday').className = "text-xs bg-emerald-700 px-2.5 py-1 rounded transition font-semibold";
+            } else if (tab === 'library') {
+                document.getElementById('viewLibrary').classList.remove('hidden');
+                document.getElementById('btnLibrary').className = "text-xs bg-emerald-700 px-2.5 py-1 rounded transition font-semibold";
+            } else if (tab === 'meals') {
+                document.getElementById('viewMeals').classList.remove('hidden');
+                document.getElementById('btnMeals').className = "text-xs bg-emerald-700 px-2.5 py-1 rounded transition font-semibold";
+            }
+        }
+
+        // VITAMIN INPUT MODE SWITCHER (% DV vs Absolute)
+        function setVitInputMode(mode) {
+            vitInputMode = mode;
+            const btnAbs = document.getElementById('btnModeAbs');
+            const btnPct = document.getElementById('btnModePct');
+            const indicator = document.getElementById('vitModeIndicator');
+
+            const keys = ['Potassium', 'Calcium', 'Iron', 'VitA', 'VitC', 'VitD', 'VitE', 'Thiamine', 'Riboflavin', 'Niacin', 'VitB6', 'VitB12', 'Folate', 'Pantothenate', 'Phosphorus', 'Magnesium', 'Zinc', 'Selenium', 'Copper', 'Manganese', 'Molybdenum', 'Biotin'];
+            const unitsMap = {
+                Potassium: 'mg', Calcium: 'mg', Iron: 'mg', VitA: 'ug', VitC: 'mg', VitD: 'ug', VitE: 'mg',
+                Thiamine: 'mg', Riboflavin: 'mg', Niacin: 'mg', VitB6: 'mg', VitB12: 'ug', Folate: 'ug',
+                Pantothenate: 'mg', Phosphorus: 'mg', Magnesium: 'mg', Zinc: 'mg', Selenium: 'ug',
+                Copper: 'mg', Manganese: 'mg', Molybdenum: 'ug', Biotin: 'ug'
+            };
+
+            if (mode === 'percent') {
+                btnPct.className = "text-xs px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-semibold transition";
+                btnAbs.className = "text-xs px-2.5 py-1 rounded-lg bg-white text-emerald-700 font-semibold border border-emerald-200 transition";
+                indicator.innerText = "Units: % Daily Value";
+                keys.forEach(k => {
+                    const fieldId = 'new' + k;
+                    const lblId = 'lbl' + k;
+                    const valInput = document.getElementById(fieldId);
+                    const lbl = document.getElementById(lblId);
+                    if (valInput && valInput.value && parseFloat(valInput.value) > 0) {
+                        const absVal = parseFloat(valInput.value);
+                        const dv = CANADIAN_DV[k.charAt(0).toLowerCase() + k.slice(1)];
+                        if (dv) {
+                            valInput.value = Math.round((absVal / dv) * 100);
+                        }
+                    }
+                    if (lbl) lbl.innerText = k.replace(/([A-Z])/g, ' $1').trim() + ' (% DV)';
+                });
+            } else {
+                btnAbs.className = "text-xs px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-semibold transition";
+                btnPct.className = "text-xs px-2.5 py-1 rounded-lg bg-white text-emerald-700 font-semibold border border-emerald-200 transition";
+                indicator.innerText = "Units: mg/ug";
+                keys.forEach(k => {
+                    const fieldId = 'new' + k;
+                    const lblId = 'lbl' + k;
+                    const valInput = document.getElementById(fieldId);
+                    const lbl = document.getElementById(lblId);
+                    if (valInput && valInput.value && parseFloat(valInput.value) > 0) {
+                        const pctVal = parseFloat(valInput.value);
+                        const dv = CANADIAN_DV[k.charAt(0).toLowerCase() + k.slice(1)];
+                        if (dv) {
+                            valInput.value = Number(((pctVal / 100) * dv).toFixed(3));
+                        }
+                    }
+                    if (lbl) lbl.innerText = k.replace(/([A-Z])/g, ' $1').trim() + ` (${unitsMap[k]})`;
+                });
+            }
+        }
+
+        function setLibDisplayMode(mode) {
+            state.vitDisplayMode = mode;
+            document.getElementById('libBtnUnits').className = mode === 'units' ? "text-[10px] px-2 py-0.5 rounded bg-white font-semibold shadow-sm transition" : "text-[10px] px-2 py-0.5 rounded text-gray-600 font-semibold transition";
+            document.getElementById('libBtnPercent').className = mode === 'percent' ? "text-[10px] px-2 py-0.5 rounded bg-white font-semibold shadow-sm transition" : "text-[10px] px-2 py-0.5 rounded text-gray-600 font-semibold transition";
+            saveData();
+        }
+
+        // FOOD LIBRARY FUNCTIONS
+        function saveCustomFood(e) {
+            e.preventDefault();
+            const editId = document.getElementById('editFoodId').value;
+
+            const keys = ['potassium', 'calcium', 'iron', 'vitA', 'vitC', 'vitD', 'vitE', 'thiamine', 'riboflavin', 'niacin', 'vitB6', 'vitB12', 'folate', 'pantothenate', 'phosphorus', 'magnesium', 'zinc', 'selenium', 'copper', 'manganese', 'molybdenum', 'biotin'];
+            let parsedNutrients = {};
+
+            keys.forEach(k => {
+                const rawVal = parseFloat(document.getElementById('new' + k.charAt(0).toUpperCase() + k.slice(1)).value) || 0;
+                if (vitInputMode === 'percent') {
+                    // Convert % DV back to absolute amount (mg/ug) for storage
+                    const dv = CANADIAN_DV[k];
+                    parsedNutrients[k] = dv ? (rawVal / 100) * dv : 0;
+                } else {
+                    parsedNutrients[k] = rawVal;
+                }
+            });
+
+            const foodData = {
+                id: editId ? parseInt(editId) : Date.now(),
+                name: document.getElementById('newName').value,
+                unit: document.getElementById('newUnit').value,
+                baseQty: parseFloat(document.getElementById('newBaseQty').value),
+                calories: parseFloat(document.getElementById('newCal').value) || 0,
+                protein: parseFloat(document.getElementById('newProtein').value) || 0,
+                carbs: parseFloat(document.getElementById('newCarbs').value) || 0,
+                fiber: parseFloat(document.getElementById('newFiber').value) || 0,
+                sugars: parseFloat(document.getElementById('newSugars').value) || 0,
+                fats: parseFloat(document.getElementById('newFats').value) || 0,
+                satFat: parseFloat(document.getElementById('newSatFat').value) || 0,
+                transFat: parseFloat(document.getElementById('newTransFat').value) || 0,
+                polyFat: parseFloat(document.getElementById('newPolyFat').value) || 0,
+                omega6: parseFloat(document.getElementById('newOmega6').value) || 0,
+                omega3: parseFloat(document.getElementById('newOmega3').value) || 0,
+                monoFat: parseFloat(document.getElementById('newMonoFat').value) || 0,
+                cholesterol: parseFloat(document.getElementById('newCholesterol').value) || 0,
+                sodium: parseFloat(document.getElementById('newSodium').value) || 0,
+                ...parsedNutrients
+            };
+
+            if (editId) {
+                const index = state.library.findIndex(f => f.id === parseInt(editId));
+                if (index !== -1) {
+                    state.library[index] = foodData;
+                }
+                cancelEditFood();
+            } else {
+                state.library.push(foodData);
+                document.getElementById('saveFoodForm').reset();
+                document.getElementById('newBaseQty').value = 100;
+                document.getElementById('newUnit').value = 'g';
+            }
+
+            if (vitInputMode === 'percent') {
+                setVitInputMode('absolute'); // Reset input mode to absolute for future creations
+            }
+
+            saveData();
+            switchTab('today');
+        }
+
+        function editLibraryItem(id) {
+            const food = state.library.find(f => f.id === id);
+            if (!food) return;
+
+            switchTab('library');
+            if (vitInputMode === 'percent') setVitInputMode('absolute');
+
+            document.getElementById('editFoodId').value = food.id;
+            document.getElementById('newName').value = food.name;
+            document.getElementById('newUnit').value = food.unit;
+            document.getElementById('newBaseQty').value = food.baseQty;
+            document.getElementById('newCal').value = food.calories;
+            document.getElementById('newProtein').value = food.protein;
+            document.getElementById('newCarbs').value = food.carbs;
+            document.getElementById('newFiber').value = food.fiber;
+            document.getElementById('newSugars').value = food.sugars;
+            document.getElementById('newFats').value = food.fats;
+            document.getElementById('newSatFat').value = food.satFat;
+            document.getElementById('newTransFat').value = food.transFat;
+            document.getElementById('newPolyFat').value = food.polyFat || 0;
+            document.getElementById('newOmega6').value = food.omega6 || 0;
+            document.getElementById('newOmega3').value = food.omega3 || 0;
+            document.getElementById('newMonoFat').value = food.monoFat || 0;
+            document.getElementById('newCholesterol').value = food.cholesterol;
+            document.getElementById('newSodium').value = food.sodium;
+            
+            const keys = ['potassium', 'calcium', 'iron', 'vitA', 'vitC', 'vitD', 'vitE', 'thiamine', 'riboflavin', 'niacin', 'vitB6', 'vitB12', 'folate', 'pantothenate', 'phosphorus', 'magnesium', 'zinc', 'selenium', 'copper', 'manganese', 'molybdenum', 'biotin'];
+            keys.forEach(k => {
+                const fieldId = 'new' + k.charAt(0).toUpperCase() + k.slice(1);
+                const el = document.getElementById(fieldId);
+                if (el) el.value = food[k] || 0;
+            });
+
+            document.getElementById('foodFormTitle').innerText = "Edit Food Item";
+            document.getElementById('saveFoodBtn').innerText = "Update Food";
+            document.getElementById('cancelEditFoodBtn').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function cancelEditFood() {
+            document.getElementById('saveFoodForm').reset();
+            document.getElementById('editFoodId').value = "";
+            document.getElementById('newBaseQty').value = 100;
+            document.getElementById('newUnit').value = 'g';
+            if (vitInputMode === 'percent') setVitInputMode('absolute');
+            document.getElementById('foodFormTitle').innerText = "Create / Save New Food";
+            document.getElementById('saveFoodBtn').innerText = "Save to Food Library";
+            document.getElementById('cancelEditFoodBtn').classList.add('hidden');
+        }
+
+        function deleteLibraryItem(id) {
+            if (confirm("Delete this food from your library?")) {
+                state.library = state.library.filter(item => item.id !== id);
+                saveData();
+            }
+        }
+
+        function toggleExpand(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.classList.toggle('hidden');
+            }
+        }
+
+        // MEALS / RECIPES FUNCTIONS
+        function addIngredientToMealDraft() {
+            const selectEl = document.getElementById('mealIngredientSelect');
+            const amountInput = document.getElementById('mealIngredientAmount');
+            const foodId = parseInt(selectEl.value);
+            const amount = parseFloat(amountInput.value);
+
+            if (!foodId || isNaN(amount) || amount <= 0) {
+                alert("Please select a valid food and amount.");
+                return;
+            }
+
+            const food = state.library.find(f => f.id === foodId);
+            if (!food) return;
+
+            currentDraftIngredients.push({
+                foodId: food.id,
+                name: food.name,
+                amount: amount,
+                unit: food.unit
+            });
+
+            amountInput.value = '';
+            renderDraftIngredients();
+        }
+
+        function removeDraftIngredient(index) {
+            currentDraftIngredients.splice(index, 1);
+            renderDraftIngredients();
+        }
+
+        function renderDraftIngredients() {
+            const container = document.getElementById('draftIngredientsList');
+            if (currentDraftIngredients.length === 0) {
+                container.innerHTML = `<span class="text-gray-400 italic">No ingredients added yet.</span>`;
+                return;
+            }
+
+            container.innerHTML = currentDraftIngredients.map((ing, idx) => `
+                <div class="flex justify-between items-center bg-white p-1.5 rounded-lg border border-gray-100">
+                    <span>${ing.name} - ${ing.amount}${ing.unit}</span>
+                    <button type="button" onclick="removeDraftIngredient(${idx})" class="text-red-500 font-bold px-1.5">×</button>
+                </div>
+            `).join('');
+        }
+
+        function saveCustomMeal(e) {
+            e.preventDefault();
+            if (currentDraftIngredients.length === 0) {
+                alert("Please add at least one ingredient to your meal.");
+                return;
+            }
+
+            const mealName = document.getElementById('mealNameInput').value;
+            const mealUnit = document.getElementById('mealUnitInput').value;
+            const baseQty = parseFloat(document.getElementById('mealBaseQtyInput').value);
+
+            let totals = {
+                calories: 0, protein: 0, carbs: 0, fiber: 0, sugars: 0,
+                fats: 0, satFat: 0, transFat: 0, polyFat: 0, omega6: 0, omega3: 0, monoFat: 0,
+                cholesterol: 0, sodium: 0, potassium: 0, calcium: 0, iron: 0,
+                vitA: 0, vitC: 0, vitD: 0, vitE: 0, thiamine: 0, riboflavin: 0, niacin: 0, vitB6: 0, vitB12: 0, folate: 0, pantothenate: 0,
+                phosphorus: 0, magnesium: 0, zinc: 0, selenium: 0, copper: 0, manganese: 0, molybdenum: 0, biotin: 0
+            };
+
+            currentDraftIngredients.forEach(ing => {
+                const food = state.library.find(f => f.id === ing.foodId);
+                if (food) {
+                    const mult = ing.amount / food.baseQty;
+                    for (let key in totals) {
+                        totals[key] += (food[key] || 0) * mult;
+                    }
+                }
+            });
+
+            const newMeal = {
+                id: Date.now(),
+                name: mealName,
+                unit: mealUnit,
+                baseQty: baseQty,
+                ingredients: [...currentDraftIngredients],
+                ...totals
+            };
+
+            state.meals.push(newMeal);
+            document.getElementById('saveMealForm').reset();
+            document.getElementById('mealBaseQtyInput').value = '';
+            document.getElementById('mealUnitInput').value = 'g';
+            currentDraftIngredients = [];
+            renderDraftIngredients();
+            saveData();
+            switchTab('today');
+        }
+
+        function deleteMeal(id) {
+            if (confirm("Delete this saved meal recipe?")) {
+                state.meals = state.meals.filter(m => m.id !== id);
+                saveData();
+            }
+        }
+
+        // LOGGING FUNCTIONS
+        function updateLogDropdown() {
+            const type = document.getElementById('logType').value;
+            const selectEl = document.getElementById('selectLogItem');
+            const labelEl = document.getElementById('logSelectLabel');
+
+            if (type === 'food') {
+                labelEl.innerText = "Select Food";
+                selectEl.innerHTML = state.library.length === 0 ? 
+                    `<option value="">No foods available</option>` :
+                    state.library.map(f => `<option value="${f.id}">${f.name} (${f.calories} kcal / ${f.baseQty}${f.unit})</option>`).join('');
+            } else {
+                labelEl.innerText = "Select Meal";
+                selectEl.innerHTML = state.meals.length === 0 ? 
+                    `<option value="">No meals available</option>` :
+                    state.meals.map(m => `<option value="${m.id}">${m.name} (${Math.round(m.calories)} kcal / ${m.baseQty}${m.unit})</option>`).join('');
+            }
+            updatePortionLabel();
+        }
+
+        function updatePortionLabel() {
+            const type = document.getElementById('logType').value;
+            const selectId = parseInt(document.getElementById('selectLogItem').value);
+            const portionLabel = document.getElementById('portionLabel');
+
+            if (type === 'food') {
+                const food = state.library.find(f => f.id === selectId);
+                if (food) portionLabel.innerText = `Amount (${food.unit}) [Base: ${food.baseQty}${food.unit}]`;
+            } else {
+                const meal = state.meals.find(m => m.id === selectId);
+                if (meal) portionLabel.innerText = `Amount (${meal.unit}) [Base Recipe: ${meal.baseQty}${meal.unit}]`;
+            }
+        }
+
+        function logItem(e) {
+            e.preventDefault();
+            const type = document.getElementById('logType').value;
+            const itemId = parseInt(document.getElementById('selectLogItem').value);
+            const amount = parseFloat(document.getElementById('foodAmount').value);
+            const mealTime = document.getElementById('mealType').value;
+
+            let sourceItem = type === 'food' ? state.library.find(f => f.id === itemId) : state.meals.find(m => m.id === itemId);
+            if (!sourceItem) return;
+
+            const multiplier = amount / sourceItem.baseQty;
+
+            let calculatedItem = {
+                logId: Date.now(),
+                name: sourceItem.name,
+                meal: mealTime,
+                amount: amount,
+                unit: sourceItem.unit,
+                date: new Date().toISOString().split('T')[0]
+            };
+
+            const keys = ['calories', 'protein', 'carbs', 'fiber', 'sugars', 'fats', 'satFat', 'transFat', 'polyFat', 'omega6', 'omega3', 'monoFat', 'cholesterol', 'sodium', 'potassium', 'calcium', 'iron', 'vitA', 'vitC', 'vitD', 'vitE', 'thiamine', 'riboflavin', 'niacin', 'vitB6', 'vitB12', 'folate', 'pantothenate', 'phosphorus', 'magnesium', 'zinc', 'selenium', 'copper', 'manganese', 'molybdenum', 'biotin'];
+            keys.forEach(k => {
+                calculatedItem[k] = Math.round(((sourceItem[k] || 0) * multiplier) * 100) / 100;
+            });
+
+            state.logs.unshift(calculatedItem);
+            saveData();
+        }
+
+        function deleteLog(logId) {
+            state.logs = state.logs.filter(l => l.logId !== logId);
+            saveData();
+        }
+
+        function editGoals() {
+            const newGoal = prompt("Enter daily calorie goal (kcal):", state.goal || 2000);
+            if (newGoal !== null && !isNaN(newGoal)) state.goal = parseInt(newGoal);
+
+            const newProt = prompt("Enter daily protein goal (g):", state.goalProtein || 150);
+            if (newProt !== null && !isNaN(newProt)) state.goalProtein = parseInt(newProt);
+
+            saveData();
+        }
+
+        function resetDay() {
+            const todayStr = new Date().toISOString().split('T')[0];
+            if (confirm("Clear all logs for today?")) {
+                state.logs = state.logs.filter(l => l.date !== todayStr);
+                saveData();
+            }
+        }
+
+        // FORMAT HELPER FOR VITAMINS/MINERALS DISPLAY
+        function formatNutrient(val, key) {
+            if (!val || val <= 0) return `0${state.vitDisplayMode === 'percent' ? '%' : (['potassium','calcium','iron','vitC','vitE','thiamine','riboflavin','niacin','vitB6','pantothenate','phosphorus','magnesium','zinc','copper'].includes(key) ? 'mg' : 'ug')}`;
+            
+            if (state.vitDisplayMode === 'percent') {
+                const dv = CANADIAN_DV[key];
+                const pct = dv ? Math.round((val / dv) * 100) : 0;
+                return `${pct}%`;
+            } else {
+                const unit = ['potassium','calcium','iron','vitC','vitE','thiamine','riboflavin','niacin','vitB6','pantothenate','phosphorus','magnesium','zinc','copper'].includes(key) ? 'mg' : 'ug';
+                return `${Number(val.toFixed(2))}${unit}`;
+            }
+        }
+
+        // RENDER UI HELPERS
+        function renderMacroDetailsHTML(item, prefix) {
+            return `
+                <button onclick="toggleExpand('${prefix}_details_${item.id || item.logId}')" class="text-emerald-600 font-semibold underline text-[11px]">View Full Macros ▾</button>
+                
+                <div id="${prefix}_details_${item.id || item.logId}" class="hidden pt-2 border-t border-gray-200 space-y-2 text-[11px] text-gray-600">
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+                        <div>Protein: <span class="font-bold">${item.protein}g</span></div>
+                        <div>Carbs: <span class="font-bold">${item.carbs}g</span></div>
+                        <div class="pl-2 col-span-2 text-gray-500">↳ Fibers: <span class="font-bold text-gray-700">${item.fiber || 0}g</span> | Sugars: <span class="font-bold text-gray-700">${item.sugars || 0}g</span></div>
+                        
+                        <div>Total Fats: <span class="font-bold">${item.fats}g</span></div>
+                        <div>• Saturated: <span class="font-bold">${item.satFat || 0}g</span></div>
+                        <div>• Trans: <span class="font-bold">${item.transFat || 0}g</span></div>
+                        <div class="col-span-2">• Polyunsaturated: <span class="font-bold">${item.polyFat || 0}g</span></div>
+                        <div class="pl-3 col-span-2 text-gray-500">↳ Omega-6: <span class="font-bold text-gray-700">${item.omega6 || 0}g</span> | Omega-3: <span class="font-bold text-gray-700">${item.omega3 || 0}g</span></div>
+                        <div class="col-span-2">• Monosaturated: <span class="font-bold">${item.monoFat || 0}g</span></div>
+                        
+                        <div>Cholesterol: <span class="font-bold">${item.cholesterol || 0}mg</span></div>
+                        <div>Sodium: <span class="font-bold">${item.sodium || 0}mg</span></div>
+                    </div>
+
+                    <!-- Vitamins & Minerals Category -->
+                    <div class="pt-2 border-t border-gray-100 space-y-1">
+                        <div class="flex justify-between items-center">
+                            <p class="font-bold text-gray-700">Vitamins & Minerals</p>
+                            <span class="text-[9px] text-gray-400 uppercase">${state.vitDisplayMode === 'percent' ? '(% Daily Value)' : '(mg / ug)'}</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-1">
+                            <div>Potassium: <span class="font-bold">${formatNutrient(item.potassium, 'potassium')}</span></div>
+                            <div>Calcium: <span class="font-bold">${formatNutrient(item.calcium, 'calcium')}</span></div>
+                            <div>Iron: <span class="font-bold">${formatNutrient(item.iron, 'iron')}</span></div>
+                        </div>
+                        <button onclick="toggleExpand('${prefix}_vit_${item.id || item.logId}')" class="text-emerald-600 font-medium underline text-[10px]">Show more vitamins/minerals ▾</button>
+                        <div id="${prefix}_vit_${item.id || item.logId}" class="hidden pt-1 grid grid-cols-2 gap-x-4 gap-y-1 text-gray-500">
+                            <div>Vitamin A: <span class="font-bold text-gray-700">${formatNutrient(item.vitA, 'vitA')}</span></div>
+                            <div>Vitamin C: <span class="font-bold text-gray-700">${formatNutrient(item.vitC, 'vitC')}</span></div>
+                            <div>Vitamin D: <span class="font-bold text-gray-700">${formatNutrient(item.vitD, 'vitD')}</span></div>
+                            <div>Vitamin E: <span class="font-bold text-gray-700">${formatNutrient(item.vitE, 'vitE')}</span></div>
+                            <div>Thiamine: <span class="font-bold text-gray-700">${formatNutrient(item.thiamine, 'thiamine')}</span></div>
+                            <div>Riboflavin: <span class="font-bold text-gray-700">${formatNutrient(item.riboflavin, 'riboflavin')}</span></div>
+                            <div>Niacin: <span class="font-bold text-gray-700">${formatNutrient(item.niacin, 'niacin')}</span></div>
+                            <div>Vitamin B₆: <span class="font-bold text-gray-700">${formatNutrient(item.vitB6, 'vitB6')}</span></div>
+                            <div>Vitamin B₁₂: <span class="font-bold text-gray-700">${formatNutrient(item.vitB12, 'vitB12')}</span></div>
+                            <div>Folate: <span class="font-bold text-gray-700">${formatNutrient(item.folate, 'folate')}</span></div>
+                            <div>Pantothenate: <span class="font-bold text-gray-700">${formatNutrient(item.pantothenate, 'pantothenate')}</span></div>
+                            <div>Phosphorus: <span class="font-bold text-gray-700">${formatNutrient(item.phosphorus, 'phosphorus')}</span></div>
+                            <div>Magnesium: <span class="font-bold text-gray-700">${formatNutrient(item.magnesium, 'magnesium')}</span></div>
+                            <div>Zinc: <span class="font-bold text-gray-700">${formatNutrient(item.zinc, 'zinc')}</span></div>
+                            <div>Selenium: <span class="font-bold text-gray-700">${formatNutrient(item.selenium, 'selenium')}</span></div>
+                            <div>Copper: <span class="font-bold text-gray-700">${formatNutrient(item.copper, 'copper')}</span></div>
+                            <div>Manganese: <span class="font-bold text-gray-700">${formatNutrient(item.manganese, 'manganese')}</span></div>
+                            <div>Molybdenum: <span class="font-bold text-gray-700">${formatNutrient(item.molybdenum, 'molybdenum')}</span></div>
+                            <div>Biotin: <span class="font-bold text-gray-700">${formatNutrient(item.biotin, 'biotin')}</span></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // RENDER UI
+        function render() {
+            applyDeviceMode();
+            const todayStr = new Date().toISOString().split('T')[0];
+            const todaysLogs = state.logs.filter(l => l.date === todayStr);
+
+            const totalCals = todaysLogs.reduce((sum, item) => sum + item.calories, 0);
+            const totalProtein = todaysLogs.reduce((sum, item) => sum + item.protein, 0);
+            const totalCarbs = todaysLogs.reduce((sum, item) => sum + item.carbs, 0);
+            const totalFats = todaysLogs.reduce((sum, item) => sum + item.fats, 0);
+            const remaining = (state.goal || 2000) - totalCals;
+            const progress = Math.min(Math.round((totalCals / (state.goal || 2000)) * 100), 100);
+
+            document.getElementById('goalDisplay').innerText = state.goal || 2000;
+            document.getElementById('goalProteinDisplay').innerText = state.goalProtein || 150;
+            document.getElementById('remainingDisplay').innerText = remaining;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('sumProtein').innerText = totalProtein.toFixed(1) + 'g';
+            document.getElementById('sumCarbs').innerText = totalCarbs.toFixed(1) + 'g';
+            document.getElementById('sumFats').innerText = totalFats.toFixed(1) + 'g';
+
+            updateLogDropdown();
+            const ingSelect = document.getElementById('mealIngredientSelect');
+            if (ingSelect) {
+                ingSelect.innerHTML = state.library.map(f => `<option value="${f.id}">${f.name} (per ${f.baseQty}${f.unit})</option>`).join('');
+            }
+
+            // Render Food Library List
+            document.getElementById('libraryList').innerHTML = state.library.map(f => `
+                <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs space-y-2">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-bold text-gray-800 text-sm">${f.name}</p>
+                            <p class="text-gray-400">Per ${f.baseQty}${f.unit}: <span class="text-emerald-600 font-semibold">${f.calories} kcal</span> | P: ${f.protein}g | C: ${f.carbs}g | F: ${f.fats}g</p>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <button onclick="editLibraryItem(${f.id})" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold px-2 py-1 rounded-lg">Edit</button>
+                            <button onclick="deleteLibraryItem(${f.id})" class="text-gray-300 hover:text-red-500 font-bold text-base px-2">×</button>
+                        </div>
+                    </div>
+                    ${renderMacroDetailsHTML(f, 'lib')}
+                </div>
+            `).join('');
+
+            // Render Saved Meals List
+            document.getElementById('mealsList').innerHTML = state.meals.length === 0 ? 
+                `<p class="text-xs text-gray-400 text-center py-2">No custom meals saved yet.</p>` :
+                state.meals.map(m => `
+                    <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs space-y-2">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-bold text-gray-800 text-sm">${m.name}</p>
+                                <p class="text-gray-400">Total Batch (${m.baseQty}${m.unit}): <span class="text-emerald-600 font-semibold">${Math.round(m.calories)} kcal</span> | P: ${m.protein.toFixed(1)}g | C: ${m.carbs.toFixed(1)}g | F: ${m.fats.toFixed(1)}g</p>
+                            </div>
+                            <button onclick="deleteMeal(${m.id})" class="text-gray-300 hover:text-red-500 font-bold text-base px-2">×</button>
+                        </div>
+                        ${renderMacroDetailsHTML(m, 'meal')}
+                    </div>
+                `).join('');
+
+            // Render Today's Log List
+            const listEl = document.getElementById('foodList');
+            if (todaysLogs.length === 0) {
+                listEl.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">No food logged yet today.</p>`;
+                return;
+            }
+
+            listEl.innerHTML = todaysLogs.map(item => `
+                <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs space-y-2">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-800">${item.name} <span class="text-xs font-normal text-gray-400">(${item.amount}${item.unit})</span></p>
+                            <p class="text-xs text-gray-400">${item.meal} • P:${item.protein}g | C:${item.carbs}g | F:${item.fats}g</p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="text-sm font-bold text-emerald-600">${item.calories} kcal</span>
+                            <button onclick="deleteLog(${item.logId})" class="text-gray-300 hover:text-red-500 font-bold text-sm">×</button>
+                        </div>
+                    </div>
+                    ${renderMacroDetailsHTML(item, 'log')}
+                </div>
+            `).join('');
+        }
+
+        render();
+    </script>
+</body>
+</html>
