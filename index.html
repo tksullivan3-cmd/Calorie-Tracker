@@ -454,6 +454,9 @@
 
     </main>
 
+    <!-- Include config.js so GIST_ID and GITHUB_TOKEN are globally defined -->
+    <script src="config.js"></script>
+
     <!-- Script Logic -->
     <script>
         // Canadian Standard Daily Values (Health Canada Reference Standards)
@@ -482,6 +485,34 @@
             biotin: 30          // ug
         };
 
+        // --- GITHUB GIST CONFIGURATION & SYNC HELPER ---
+        async function getAppSettings() {
+            // If config.js loaded successfully (Desktop)
+            if (typeof CONFIG !== 'undefined' && CONFIG.GIST_ID && CONFIG.GITHUB_TOKEN) {
+                return {
+                    gistId: CONFIG.GIST_ID,
+                    token: CONFIG.GITHUB_TOKEN
+                };
+            }
+
+            // Mobile fallback: check localStorage or prompt once
+            let token = localStorage.getItem('github_gist_token');
+            let gistId = localStorage.getItem('github_gist_id');
+
+            if (!token || !gistId) {
+                gistId = prompt("Enter your GitHub Gist ID:") || "ea143b6fac0a01b2f839cffc6fd06496";
+                token = prompt("Enter your GitHub Personal Access Token:");
+                
+                if (token && gistId) {
+                    localStorage.setItem('github_gist_token', token.trim());
+                    localStorage.setItem('github_gist_id', gistId.trim());
+                }
+            }
+
+            return { gistId, token };
+        }
+        // ---------------------------------
+
         let state = JSON.parse(localStorage.getItem('macroTrackerState')) || {
             goal: 2000,
             goalProtein: 150,
@@ -505,9 +536,58 @@
         let vitInputMode = 'absolute'; // 'absolute' or 'percent'
         let currentDraftIngredients = [];
 
-        function saveData() {
+        async function loadCloudData() {
+            try {
+                const { gistId, token } = await getAppSettings();
+                if (!token || !gistId) return;
+
+                const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+                    headers: {
+                        'Accept': 'application/vnd.github+json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const result = await response.json();
+
+                const filename = Object.keys(result.files)[0];
+                const fileContent = result.files[filename].content;
+
+                if (fileContent) {
+                    state = JSON.parse(fileContent);
+                    if (!state.vitDisplayMode) state.vitDisplayMode = 'units';
+                }
+            } catch (error) {
+                console.error("Failed to load from Gist, falling back to local storage:", error);
+            }
+            render();
+        }
+
+        async function saveData() {
             localStorage.setItem('macroTrackerState', JSON.stringify(state));
             render();
+
+            try {
+                const { gistId, token } = await getAppSettings();
+                if (!token || !gistId) return;
+
+                await fetch(`https://api.github.com/gists/${gistId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Accept': 'application/vnd.github+json',
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        files: {
+                            "macro-data.json": {
+                                content: JSON.stringify(state, null, 2)
+                            }
+                        }
+                    })
+                });
+            } catch (error) {
+                console.error("Failed to sync changes to Gist:", error);
+            }
         }
 
         function setDeviceMode(mode) {
@@ -630,7 +710,6 @@
             keys.forEach(k => {
                 const rawVal = parseFloat(document.getElementById('new' + k.charAt(0).toUpperCase() + k.slice(1)).value) || 0;
                 if (vitInputMode === 'percent') {
-                    // Convert % DV back to absolute amount (mg/ug) for storage
                     const dv = CANADIAN_DV[k];
                     parsedNutrients[k] = dv ? (rawVal / 100) * dv : 0;
                 } else {
@@ -674,7 +753,7 @@
             }
 
             if (vitInputMode === 'percent') {
-                setVitInputMode('absolute'); // Reset input mode to absolute for future creations
+                setVitInputMode('absolute');
             }
 
             saveData();
@@ -1091,7 +1170,8 @@
             `).join('');
         }
 
-        render();
+        // Initialize by loading cloud data
+        loadCloudData();
     </script>
 </body>
 </html>
