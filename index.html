@@ -9,22 +9,55 @@
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans pb-20">
 
-    <!-- Top Navigation & Device Mode Switcher -->
-    <header class="bg-emerald-600 text-white p-3 shadow-md sticky top-0 z-50">
-        <div id="mainHeaderContainer" class="max-w-md mx-auto flex justify-between items-center transition-all duration-300">
-            <h1 class="text-base font-bold flex items-center space-x-1">
-                <span>🔥 Macro Tracker</span>
-                <span id="modeBadge" class="text-[10px] bg-emerald-700 px-1.5 py-0.5 rounded uppercase tracking-wider opacity-90">Mobile</span>
-            </h1>
-            <div class="flex items-center space-x-1">
-                <!-- Device Mode Toggle -->
-                <button onclick="setDeviceMode('mobile')" id="btnDevMobile" class="text-xs bg-emerald-900 px-2 py-1 rounded transition font-bold">📱 Mobile</button>
-                <button onclick="setDeviceMode('desktop')" id="btnDevDesktop" class="text-xs bg-emerald-700 px-2 py-1 rounded transition opacity-80">💻 Desktop</button>
-                <span class="text-emerald-400 mx-1">|</span>
-                <button onclick="switchTab('today')" id="btnToday" class="text-xs bg-emerald-700 px-2 py-1 rounded transition font-semibold">Today</button>
-                <button onclick="switchTab('library')" id="btnLibrary" class="text-xs bg-emerald-800 px-2 py-1 rounded transition opacity-80">Foods</button>
-                <button onclick="switchTab('meals')" id="btnMeals" class="text-xs bg-emerald-800 px-2 py-1 rounded transition opacity-80">Meals</button>
+    <header class="bg-emerald-600 text-white shadow-md sticky top-0 z-50">
+        <div id="mainHeaderContainer"
+            class="max-w-md mx-auto transition-all duration-300">
+
+            <!-- Navigation Tabs -->
+            <div class="grid grid-cols-3 w-full">
+                <button
+                    onclick="switchTab('today')"
+                    id="btnToday"
+                    class="text-sm bg-emerald-700 py-3 transition font-semibold border-r border-emerald-600">
+                    Today
+                </button>
+
+                <button
+                    onclick="switchTab('library')"
+                    id="btnLibrary"
+                    class="text-sm bg-emerald-800 py-3 transition opacity-80 border-r border-emerald-600">
+                    Foods
+                </button>
+
+                <button
+                    onclick="switchTab('meals')"
+                    id="btnMeals"
+                    class="text-sm bg-emerald-800 py-3 transition opacity-80">
+                    Meals
+                </button>
             </div>
+
+            <!-- Title Row -->
+            <div class="flex justify-between items-center px-4 py-2">
+                <h1 class="text-base font-bold flex items-center space-x-2">
+                    <span> Macro Tracker</span>
+
+                    <span
+                        id="modeBadge"
+                        class="text-[10px] bg-emerald-700 px-1.5 py-0.5 rounded uppercase tracking-wider opacity-90">
+                        Mobile
+                    </span>
+                </h1>
+
+                <button
+                    onclick="toggleDeviceMode()"
+                    id="btnDeviceMode"
+                    title="Switch between mobile and desktop view"
+                    class="w-8 h-8 flex items-center justify-center bg-emerald-900 hover:bg-emerald-800 rounded-lg transition text-base">
+                    💻
+                </button>
+            </div>
+
         </div>
     </header>
 
@@ -96,7 +129,35 @@
                             </select>
                         </div>
                     </div>
+                    <div id="todayFoodFilters" class="space-y-2">
+                        <div class="grid grid-cols-2 gap-2">
+                            <input
+                                type="text"
+                                id="todayFoodSearch"
+                                oninput="updateLogDropdown()"
+                                placeholder="🔍 Search foods..."
+                                class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm bg-gray-50 focus:bg-white focus:outline-none focus:border-emerald-500"
+                            >
 
+                            <select
+                                id="todayFoodCategory"
+                                onchange="updateLogDropdown()"
+                                class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:border-emerald-500"
+                            >
+                                <option value="">All Categories</option>
+                                <option value="Condiments">Condiments</option>
+                                <option value="Meat">Meat</option>
+                                <option value="Drinks">Drinks</option>
+                                <option value="Carbs">Carbs</option>
+                                <option value="Grains">Grains</option>
+                                <option value="Fruit & Vegetables">Fruit & Vegetables</option>
+                                <option value="Dairy">Dairy</option>
+                                <option value="Spices">Spices</option>
+                                <option value="Premade">Premade</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
                     <div>
                         <label id="logSelectLabel" class="block text-xs font-semibold text-gray-600 mb-1">Select Food</label>
                         <select id="selectLogItem" onchange="updatePortionLabel()" class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:border-emerald-500">
@@ -147,10 +208,28 @@
 
                 <form id="saveFoodForm" onsubmit="saveCustomFood(event)" class="space-y-3">
                     <input type="hidden" id="editFoodId" value="">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Food Name</label>
-                        <input type="text" id="newName" placeholder="e.g. Cremini Mushrooms" required
-                            class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-500">
+                    
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="col-span-2">
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Food Name</label>
+                            <input type="text" id="newName" placeholder="e.g. Cremini Mushrooms" required
+                                class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Category</label>
+                            <select id="newCategory" class="w-full px-2 py-2.5 rounded-xl border border-gray-200 text-xs bg-white focus:outline-none focus:border-emerald-500">
+                                <option value="Fruit & Vegetables">Fruit & Veg</option>
+                                <option value="Carbs">Carbs</option>
+                                <option value="Meat">Meat</option>
+                                <option value="Dairy">Dairy</option>
+                                <option value="Drinks">Drinks</option>
+                                <option value="Condiments">Condiments</option>
+                                <option value="Spices">Spices</option>
+                                <option value="Grains">Grains</option>
+                                <option value="Premade">Premade</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
                     </div>
                     
                     <div class="grid grid-cols-2 gap-2">
@@ -278,6 +357,10 @@
                         <div id="creatorExtraVits" class="hidden space-y-2 pt-1">
                             <div class="grid grid-cols-3 gap-2">
                                 <div>
+                                    <label id="lblIodide" class="block text-[10px] text-gray-500 mb-0.5">Iodide (ug)</label>
+                                    <input type="number" id="newIodide" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                                </div>
+                                <div>
                                     <label id="lblVitA" class="block text-[10px] text-gray-500 mb-0.5">Vitamin A (ug)</label>
                                     <input type="number" id="newVitA" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
                                 </div>
@@ -285,26 +368,38 @@
                                     <label id="lblVitC" class="block text-[10px] text-gray-500 mb-0.5">Vitamin C (mg)</label>
                                     <input type="number" id="newVitC" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
                                 </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
                                 <div>
                                     <label id="lblVitD" class="block text-[10px] text-gray-500 mb-0.5">Vitamin D (ug)</label>
                                     <input type="number" id="newVitD" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
                                 </div>
-                            </div>
-                            <div class="grid grid-cols-3 gap-2">
                                 <div>
                                     <label id="lblVitE" class="block text-[10px] text-gray-500 mb-0.5">Vitamin E (mg)</label>
                                     <input type="number" id="newVitE" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
+                                </div>
+
+                                <div>
+                                    <label id="lblVitK" class="block text-[10px] text-gray-500 mb-0.5">
+                                        Vitamin K (ug)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="newVitK"
+                                        step="any"
+                                        value="0"
+                                        class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
                                 </div>
                                 <div>
                                     <label id="lblThiamine" class="block text-[10px] text-gray-500 mb-0.5">Thiamine (mg)</label>
                                     <input type="number" id="newThiamine" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
                                 </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
                                 <div>
                                     <label id="lblRiboflavin" class="block text-[10px] text-gray-500 mb-0.5">Riboflavin (mg)</label>
                                     <input type="number" id="newRiboflavin" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
                                 </div>
-                            </div>
-                            <div class="grid grid-cols-3 gap-2">
                                 <div>
                                     <label id="lblNiacin" class="block text-[10px] text-gray-500 mb-0.5">Niacin (mg)</label>
                                     <input type="number" id="newNiacin" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
@@ -313,12 +408,12 @@
                                     <label id="lblVitB6" class="block text-[10px] text-gray-500 mb-0.5">Vitamin B₆ (mg)</label>
                                     <input type="number" id="newVitB6" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
                                 </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
                                 <div>
                                     <label id="lblVitB12" class="block text-[10px] text-gray-500 mb-0.5">Vitamin B₁₂ (ug)</label>
                                     <input type="number" id="newVitB12" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
                                 </div>
-                            </div>
-                            <div class="grid grid-cols-3 gap-2">
                                 <div>
                                     <label id="lblFolate" class="block text-[10px] text-gray-500 mb-0.5">Folate (ug)</label>
                                     <input type="number" id="newFolate" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
@@ -327,12 +422,12 @@
                                     <label id="lblPantothenate" class="block text-[10px] text-gray-500 mb-0.5">Pantothenate (mg)</label>
                                     <input type="number" id="newPantothenate" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
                                 </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
                                 <div>
                                     <label id="lblPhosphorus" class="block text-[10px] text-gray-500 mb-0.5">Phosphorus (mg)</label>
                                     <input type="number" id="newPhosphorus" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
                                 </div>
-                            </div>
-                            <div class="grid grid-cols-3 gap-2">
                                 <div>
                                     <label id="lblMagnesium" class="block text-[10px] text-gray-500 mb-0.5">Magnesium (mg)</label>
                                     <input type="number" id="newMagnesium" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
@@ -341,12 +436,12 @@
                                     <label id="lblZinc" class="block text-[10px] text-gray-500 mb-0.5">Zinc (mg)</label>
                                     <input type="number" id="newZinc" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
                                 </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
                                 <div>
                                     <label id="lblSelenium" class="block text-[10px] text-gray-500 mb-0.5">Selenium (ug)</label>
                                     <input type="number" id="newSelenium" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
                                 </div>
-                            </div>
-                            <div class="grid grid-cols-3 gap-2">
                                 <div>
                                     <label id="lblCopper" class="block text-[10px] text-gray-500 mb-0.5">Copper (mg)</label>
                                     <input type="number" id="newCopper" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
@@ -355,12 +450,12 @@
                                     <label id="lblManganese" class="block text-[10px] text-gray-500 mb-0.5">Manganese (mg)</label>
                                     <input type="number" id="newManganese" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
                                 </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
                                 <div>
                                     <label id="lblMolybdenum" class="block text-[10px] text-gray-500 mb-0.5">Molybdenum (ug)</label>
                                     <input type="number" id="newMolybdenum" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
                                 </div>
-                            </div>
-                            <div class="grid grid-cols-3 gap-2">
                                 <div>
                                     <label id="lblBiotin" class="block text-[10px] text-gray-500 mb-0.5">Biotin (ug)</label>
                                     <input type="number" id="newBiotin" step="any" value="0" class="w-full px-2 py-1.5 rounded-xl border border-gray-200 text-xs">
@@ -385,8 +480,36 @@
                         <button type="button" onclick="setLibDisplayMode('percent')" id="libBtnPercent" class="text-[10px] px-2 py-0.5 rounded text-gray-600 font-semibold transition">% DV</button>
                     </div>
                 </div>
-                <div id="libraryList" class="space-y-2.5">
-                    <!-- Dynamic library items -->
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    <input
+                        type="text"
+                        id="foodSearch"
+                        oninput="render()"
+                        placeholder="🔍 Search foods..."
+                        class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm bg-gray-50 focus:bg-white focus:outline-none focus:border-emerald-500"
+                    >
+
+                    <select
+                        id="foodCategoryFilter"
+                        onchange="render()"
+                        class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:border-emerald-500"
+                    >   
+                        <option value="">Select Category</option>
+                        <option value="all">All Categories</option>
+                        <option value="Condiments">Condiments</option>
+                        <option value="Meat">Meat</option>
+                        <option value="Drinks">Drinks</option>
+                        <option value="Carbs">Carbs</option>
+                        <option value="Grains">Grains</option>
+                        <option value="Fruit & Vegetables">Fruit & Vegetables</option>
+                        <option value="Dairy">Dairy</option>
+                        <option value="Spices">Spices</option>
+                        <option value="Premade">Premade</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div id="libraryList" class="space-y-4">
+                    <!-- Dynamic library items grouped by category & sorted alphabetically -->
                 </div>
             </div>
         </div>
@@ -394,8 +517,22 @@
         <!-- ================= MEALS VIEW ================= -->
         <div id="viewMeals" class="space-y-4 hidden">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                <h2 class="text-sm font-bold text-gray-700 mb-3">Create Custom Meal / Recipe</h2>
+                <div class="flex justify-between items-center mb-3">
+                    <h2 id="mealFormTitle" class="text-sm font-bold text-gray-700">
+                        Create Custom Meal / Recipe
+                    </h2>
+
+                    <button
+                        id="cancelEditMealBtn"
+                        type="button"
+                        onclick="cancelEditMeal()"
+                        class="text-xs text-red-500 underline hidden">
+                        Cancel Edit
+                    </button>
+                </div>
+
                 <form id="saveMealForm" onsubmit="saveCustomMeal(event)" class="space-y-3">
+                    <input type="hidden" id="editMealId" value="">
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">Meal Name</label>
                         <input type="text" id="mealNameInput" placeholder="e.g. Mushroom Bowl" required
@@ -418,6 +555,33 @@
                     <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 space-y-2">
                         <label class="block text-xs font-semibold text-gray-700">Add Ingredients from Library</label>
                         <div class="grid grid-cols-2 gap-2">
+                            <input
+                                type="text"
+                                id="mealFoodSearch"
+                                oninput="updateMealIngredientDropdown()"
+                                placeholder="🔍 Search foods..."
+                                class="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs bg-white focus:outline-none focus:border-emerald-500"
+                            >
+
+                            <select
+                                id="mealFoodCategory"
+                                onchange="updateMealIngredientDropdown()"
+                                class="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs bg-white focus:outline-none focus:border-emerald-500"
+                            >
+                                <option value="">All Categories</option>
+                                <option value="Condiments">Condiments</option>
+                                <option value="Meat">Meat</option>
+                                <option value="Drinks">Drinks</option>
+                                <option value="Carbs">Carbs</option>
+                                <option value="Grains">Grains</option>
+                                <option value="Fruit & Vegetables">Fruit & Vegetables</option>
+                                <option value="Dairy">Dairy</option>
+                                <option value="Spices">Spices</option>
+                                <option value="Premade">Premade</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
                             <select id="mealIngredientSelect" class="w-full px-2 py-2 rounded-lg border border-gray-200 text-xs bg-white">
                                 <!-- Populated dynamically -->
                             </select>
@@ -437,7 +601,10 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl shadow-md transition text-sm mt-2">
+                    <button
+                        type="submit"
+                        id="saveMealBtn"
+                        class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl shadow-md transition text-sm mt-2">
                         Save Meal Recipe
                     </button>
                 </form>
@@ -464,10 +631,12 @@
             potassium: 4700,    // mg
             calcium: 1300,      // mg
             iron: 18,           // mg
+            iodide: 150,        // ug
             vitA: 900,          // ug RAE
             vitC: 90,           // mg
             vitD: 20,           // ug (800 IU)
             vitE: 15,           // mg
+            vitK: 120,          // ug
             thiamine: 1.2,      // mg
             riboflavin: 1.3,    // mg
             niacin: 16,         // mg
@@ -484,6 +653,20 @@
             molybdenum: 45,     // ug
             biotin: 30          // ug
         };
+
+        // Standard Food Categories Order
+        const CATEGORIES_ORDER = [
+            "Condiments",
+            "Meat",
+            "Drinks",
+            "Carbs",
+            "Fruit & Vegetables",
+            "Dairy",
+            "Spices",
+            "Grains",
+            "Premade",
+            "Other"
+        ];
 
         // --- GITHUB GIST CONFIGURATION & SYNC HELPER ---
         async function getAppSettings() {
@@ -520,10 +703,10 @@
             vitDisplayMode: 'units', // 'units' or 'percent'
             library: [
                 {
-                    id: 1, name: "Cremini Mushrooms", unit: "g", baseQty: 100,
+                    id: 1, name: "Cremini Mushrooms", category: "Fruit & Vegetables", unit: "g", baseQty: 100,
                     calories: 22, protein: 2.5, carbs: 3.3, fiber: 1, sugars: 1.5,
                     fats: 0.2, satFat: 0, transFat: 0, polyFat: 0.1, omega6: 0.1, omega3: 0, monoFat: 0,
-                    cholesterol: 0, sodium: 5, potassium: 318, calcium: 26, iron: 0.36,
+                    cholesterol: 0, sodium: 5, potassium: 318, calcium: 26, iron: 0.36, iodide: 0,
                     vitA: 0, vitC: 2.1, vitD: 0.2, vitE: 0.1, thiamine: 0.07, riboflavin: 0.32, niacin: 3.5, vitB6: 0.1, vitB12: 0.1, folate: 17, pantothenate: 1.5,
                     phosphorus: 125, magnesium: 16, zinc: 1.1, selenium: 24.8, copper: 0.3, manganese: 0.1, molybdenum: 0, biotin: 5
                 }
@@ -590,9 +773,19 @@
             }
         }
 
+        function toggleDeviceMode() {
+            state.deviceMode = state.deviceMode === 'mobile' ? 'desktop' : 'mobile';
+
+            localStorage.setItem('macroTrackerState', JSON.stringify(state));
+
+            applyDeviceMode();
+        }
+
         function setDeviceMode(mode) {
             state.deviceMode = mode;
+
             localStorage.setItem('macroTrackerState', JSON.stringify(state));
+
             applyDeviceMode();
         }
 
@@ -600,21 +793,33 @@
             const wrapper = document.getElementById('appWrapper');
             const headerContainer = document.getElementById('mainHeaderContainer');
             const modeBadge = document.getElementById('modeBadge');
-            const btnMobile = document.getElementById('btnDevMobile');
-            const btnDesktop = document.getElementById('btnDevDesktop');
+            const button = document.getElementById('btnDeviceMode');
 
             if (state.deviceMode === 'desktop') {
-                wrapper.className = "max-w-6xl mx-auto p-6 space-y-6 transition-all duration-300";
-                headerContainer.className = "max-w-6xl mx-auto flex justify-between items-center transition-all duration-300";
+                wrapper.className =
+                    "max-w-6xl mx-auto p-6 space-y-6 transition-all duration-300";
+
+                headerContainer.className =
+                    "max-w-6xl mx-auto transition-all duration-300";
+
                 modeBadge.innerText = "Desktop";
-                btnDesktop.className = "text-xs bg-emerald-900 px-2 py-1 rounded transition font-bold";
-                btnMobile.className = "text-xs bg-emerald-700 px-2 py-1 rounded transition opacity-80";
+
+                // Show what clicking the button will switch to
+                button.innerText = "📱";
+                button.title = "Switch to mobile view";
+
             } else {
-                wrapper.className = "max-w-md mx-auto p-4 space-y-4 transition-all duration-300";
-                headerContainer.className = "max-w-md mx-auto flex justify-between items-center transition-all duration-300";
+                wrapper.className =
+                    "max-w-md mx-auto p-4 space-y-4 transition-all duration-300";
+
+                headerContainer.className =
+                    "max-w-6xl mx-auto transition-all duration-300";
+
                 modeBadge.innerText = "Mobile";
-                btnMobile.className = "text-xs bg-emerald-900 px-2 py-1 rounded transition font-bold";
-                btnDesktop.className = "text-xs bg-emerald-700 px-2 py-1 rounded transition opacity-80";
+
+                // Show what clicking the button will switch to
+                button.innerText = "💻";
+                button.title = "Switch to desktop view";
             }
         }
 
@@ -638,56 +843,89 @@
             }
         }
 
-        // VITAMIN INPUT MODE SWITCHER (% DV vs Absolute)
         function setVitInputMode(mode) {
             vitInputMode = mode;
+
             const btnAbs = document.getElementById('btnModeAbs');
             const btnPct = document.getElementById('btnModePct');
             const indicator = document.getElementById('vitModeIndicator');
 
-            const keys = ['Potassium', 'Calcium', 'Iron', 'VitA', 'VitC', 'VitD', 'VitE', 'Thiamine', 'Riboflavin', 'Niacin', 'VitB6', 'VitB12', 'Folate', 'Pantothenate', 'Phosphorus', 'Magnesium', 'Zinc', 'Selenium', 'Copper', 'Manganese', 'Molybdenum', 'Biotin'];
+            const keys = [
+                'Potassium', 'Calcium', 'Iron', 'Iodide',
+                'VitA', 'VitC', 'VitD', 'VitE', 'VitK',
+                'Thiamine', 'Riboflavin', 'Niacin',
+                'VitB6', 'VitB12', 'Folate', 'Pantothenate',
+                'Phosphorus', 'Magnesium', 'Zinc',
+                'Selenium', 'Copper', 'Manganese',
+                'Molybdenum', 'Biotin'
+            ];
+
             const unitsMap = {
-                Potassium: 'mg', Calcium: 'mg', Iron: 'mg', VitA: 'ug', VitC: 'mg', VitD: 'ug', VitE: 'mg',
-                Thiamine: 'mg', Riboflavin: 'mg', Niacin: 'mg', VitB6: 'mg', VitB12: 'ug', Folate: 'ug',
-                Pantothenate: 'mg', Phosphorus: 'mg', Magnesium: 'mg', Zinc: 'mg', Selenium: 'ug',
-                Copper: 'mg', Manganese: 'mg', Molybdenum: 'ug', Biotin: 'ug'
+                Potassium: 'mg',
+                Calcium: 'mg',
+                Iron: 'mg',
+                Iodide: 'ug',
+                VitA: 'ug',
+                VitC: 'mg',
+                VitD: 'ug',
+                VitE: 'mg',
+                VitK: 'ug',
+                Thiamine: 'mg',
+                Riboflavin: 'mg',
+                Niacin: 'mg',
+                VitB6: 'mg',
+                VitB12: 'ug',
+                Folate: 'ug',
+                Pantothenate: 'mg',
+                Phosphorus: 'mg',
+                Magnesium: 'mg',
+                Zinc: 'mg',
+                Selenium: 'ug',
+                Copper: 'mg',
+                Manganese: 'mg',
+                Molybdenum: 'ug',
+                Biotin: 'ug'
             };
 
             if (mode === 'percent') {
-                btnPct.className = "text-xs px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-semibold transition";
-                btnAbs.className = "text-xs px-2.5 py-1 rounded-lg bg-white text-emerald-700 font-semibold border border-emerald-200 transition";
-                indicator.innerText = "Units: % Daily Value";
+
+                btnPct.className =
+                "text-xs px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-semibold transition";
+
+                btnAbs.className =
+                    "text-xs px-2.5 py-1 rounded-lg bg-white text-emerald-700 font-semibold border border-emerald-200 transition";
+
+                indicator.innerText = "Input: % Daily Value";
+
+                // ONLY change labels — DO NOT change existing values
                 keys.forEach(k => {
-                    const fieldId = 'new' + k;
-                    const lblId = 'lbl' + k;
-                    const valInput = document.getElementById(fieldId);
-                    const lbl = document.getElementById(lblId);
-                    if (valInput && valInput.value && parseFloat(valInput.value) > 0) {
-                        const absVal = parseFloat(valInput.value);
-                        const dv = CANADIAN_DV[k.charAt(0).toLowerCase() + k.slice(1)];
-                        if (dv) {
-                            valInput.value = Math.round((absVal / dv) * 100);
-                        }
+                    const lbl = document.getElementById('lbl' + k);
+
+                    if (lbl) {
+                        lbl.innerText =
+                            k.replace(/([A-Z])/g, ' $1').trim() + ' (% DV)';
                     }
-                    if (lbl) lbl.innerText = k.replace(/([A-Z])/g, ' $1').trim() + ' (% DV)';
                 });
+
             } else {
-                btnAbs.className = "text-xs px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-semibold transition";
-                btnPct.className = "text-xs px-2.5 py-1 rounded-lg bg-white text-emerald-700 font-semibold border border-emerald-200 transition";
-                indicator.innerText = "Units: mg/ug";
+
+                btnAbs.className =
+                    "text-xs px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-semibold transition";
+
+                btnPct.className =
+                    "text-xs px-2.5 py-1 rounded-lg bg-white text-emerald-700 font-semibold border border-emerald-200 transition";
+
+                indicator.innerText = "Input: mg/ug";
+
+                // ONLY change labels — DO NOT change existing values
                 keys.forEach(k => {
-                    const fieldId = 'new' + k;
-                    const lblId = 'lbl' + k;
-                    const valInput = document.getElementById(fieldId);
-                    const lbl = document.getElementById(lblId);
-                    if (valInput && valInput.value && parseFloat(valInput.value) > 0) {
-                        const pctVal = parseFloat(valInput.value);
-                        const dv = CANADIAN_DV[k.charAt(0).toLowerCase() + k.slice(1)];
-                        if (dv) {
-                            valInput.value = Number(((pctVal / 100) * dv).toFixed(3));
-                        }
+                    const lbl = document.getElementById('lbl' + k);
+
+                    if (lbl) {
+                        lbl.innerText =
+                            k.replace(/([A-Z])/g, ' $1').trim()
+                            + ` (${unitsMap[k]})`;
                     }
-                    if (lbl) lbl.innerText = k.replace(/([A-Z])/g, ' $1').trim() + ` (${unitsMap[k]})`;
                 });
             }
         }
@@ -704,7 +942,7 @@
             e.preventDefault();
             const editId = document.getElementById('editFoodId').value;
 
-            const keys = ['potassium', 'calcium', 'iron', 'vitA', 'vitC', 'vitD', 'vitE', 'thiamine', 'riboflavin', 'niacin', 'vitB6', 'vitB12', 'folate', 'pantothenate', 'phosphorus', 'magnesium', 'zinc', 'selenium', 'copper', 'manganese', 'molybdenum', 'biotin'];
+            const keys = ['potassium', 'calcium', 'iron', 'iodide', 'vitA', 'vitC', 'vitD', 'vitE', 'vitK', 'thiamine', 'riboflavin', 'niacin', 'vitB6', 'vitB12', 'folate', 'pantothenate', 'phosphorus', 'magnesium', 'zinc', 'selenium', 'copper', 'manganese', 'molybdenum', 'biotin'];
             let parsedNutrients = {};
 
             keys.forEach(k => {
@@ -720,6 +958,7 @@
             const foodData = {
                 id: editId ? parseInt(editId) : Date.now(),
                 name: document.getElementById('newName').value,
+                category: document.getElementById('newCategory').value || 'Other',
                 unit: document.getElementById('newUnit').value,
                 baseQty: parseFloat(document.getElementById('newBaseQty').value),
                 calories: parseFloat(document.getElementById('newCal').value) || 0,
@@ -757,7 +996,20 @@
             }
 
             saveData();
-            switchTab('today');
+        }
+
+        function duplicateLibraryItem(id) {
+            const food = state.library.find(f => f.id === id);
+            if (!food) return;
+
+            const duplicatedFood = {
+                ...food,
+                id: Date.now(),
+                name: food.name + " (Copy)"
+            };
+
+            state.library.push(duplicatedFood);
+            saveData();
         }
 
         function editLibraryItem(id) {
@@ -769,6 +1021,7 @@
 
             document.getElementById('editFoodId').value = food.id;
             document.getElementById('newName').value = food.name;
+            document.getElementById('newCategory').value = food.category || 'Other';
             document.getElementById('newUnit').value = food.unit;
             document.getElementById('newBaseQty').value = food.baseQty;
             document.getElementById('newCal').value = food.calories;
@@ -786,7 +1039,7 @@
             document.getElementById('newCholesterol').value = food.cholesterol;
             document.getElementById('newSodium').value = food.sodium;
             
-            const keys = ['potassium', 'calcium', 'iron', 'vitA', 'vitC', 'vitD', 'vitE', 'thiamine', 'riboflavin', 'niacin', 'vitB6', 'vitB12', 'folate', 'pantothenate', 'phosphorus', 'magnesium', 'zinc', 'selenium', 'copper', 'manganese', 'molybdenum', 'biotin'];
+            const keys = ['potassium', 'calcium', 'iron', 'iodide', 'vitA', 'vitC', 'vitD', 'vitE', 'vitK', 'thiamine', 'riboflavin', 'niacin', 'vitB6', 'vitB12', 'folate', 'pantothenate', 'phosphorus', 'magnesium', 'zinc', 'selenium', 'copper', 'manganese', 'molybdenum', 'biotin'];
             keys.forEach(k => {
                 const fieldId = 'new' + k.charAt(0).toUpperCase() + k.slice(1);
                 const el = document.getElementById(fieldId);
@@ -824,6 +1077,44 @@
             }
         }
 
+        function updateMealIngredientDropdown() {
+            const selectEl = document.getElementById('mealIngredientSelect');
+            const searchEl = document.getElementById('mealFoodSearch');
+            const categoryEl = document.getElementById('mealFoodCategory');
+
+            if (!selectEl) return;
+
+            const searchTerm = searchEl
+                ? searchEl.value.trim().toLowerCase()
+                : '';
+
+            const selectedCategory = categoryEl
+                ? categoryEl.value
+                : '';
+
+            const filteredFoods = state.library
+                .filter(food => {
+                    const matchesSearch =
+                        !searchTerm ||
+                        (food.name || '').toLowerCase().includes(searchTerm);
+
+                    const matchesCategory =
+                        !selectedCategory ||
+                        food.category === selectedCategory;
+
+                    return matchesSearch && matchesCategory;
+                })
+                .sort((a, b) => a.name.localeCompare(b.name));
+
+            selectEl.innerHTML = filteredFoods.length === 0
+                ? `<option value="">No matching foods</option>`
+                : filteredFoods.map(food =>
+                    `<option value="${food.id}">
+                        ${food.name} (${food.calories} kcal / ${food.baseQty}${food.unit})
+                    </option>`
+                ).join('');
+        }
+            
         // MEALS / RECIPES FUNCTIONS
         function addIngredientToMealDraft() {
             const selectEl = document.getElementById('mealIngredientSelect');
@@ -872,35 +1163,77 @@
 
         function saveCustomMeal(e) {
             e.preventDefault();
+
             if (currentDraftIngredients.length === 0) {
                 alert("Please add at least one ingredient to your meal.");
                 return;
             }
+
+            const editId = document.getElementById('editMealId').value;
 
             const mealName = document.getElementById('mealNameInput').value;
             const mealUnit = document.getElementById('mealUnitInput').value;
             const baseQty = parseFloat(document.getElementById('mealBaseQtyInput').value);
 
             let totals = {
-                calories: 0, protein: 0, carbs: 0, fiber: 0, sugars: 0,
-                fats: 0, satFat: 0, transFat: 0, polyFat: 0, omega6: 0, omega3: 0, monoFat: 0,
-                cholesterol: 0, sodium: 0, potassium: 0, calcium: 0, iron: 0,
-                vitA: 0, vitC: 0, vitD: 0, vitE: 0, thiamine: 0, riboflavin: 0, niacin: 0, vitB6: 0, vitB12: 0, folate: 0, pantothenate: 0,
-                phosphorus: 0, magnesium: 0, zinc: 0, selenium: 0, copper: 0, manganese: 0, molybdenum: 0, biotin: 0
+                calories: 0,
+                protein: 0,
+                carbs: 0,
+                fiber: 0,
+                sugars: 0,
+
+                fats: 0,
+                satFat: 0,
+                transFat: 0,
+                polyFat: 0,
+                omega6: 0,
+                omega3: 0,
+                monoFat: 0,
+
+                cholesterol: 0,
+                sodium: 0,
+                potassium: 0,
+                calcium: 0,
+                iron: 0,
+                iodide: 0,
+
+                vitA: 0,
+                vitC: 0,
+                vitD: 0,
+                vitE: 0,
+                vitK: 0,
+                thiamine: 0,
+                riboflavin: 0,
+                niacin: 0,
+                vitB6: 0,
+                vitB12: 0,
+                folate: 0,
+                pantothenate: 0,
+
+                phosphorus: 0,
+                magnesium: 0,
+                zinc: 0,
+                selenium: 0,
+                copper: 0,
+                manganese: 0,
+                molybdenum: 0,
+                biotin: 0
             };
 
             currentDraftIngredients.forEach(ing => {
                 const food = state.library.find(f => f.id === ing.foodId);
+
                 if (food) {
                     const mult = ing.amount / food.baseQty;
+
                     for (let key in totals) {
                         totals[key] += (food[key] || 0) * mult;
                     }
                 }
             });
 
-            const newMeal = {
-                id: Date.now(),
+            const mealData = {
+                id: editId ? parseInt(editId) : Date.now(),
                 name: mealName,
                 unit: mealUnit,
                 baseQty: baseQty,
@@ -908,14 +1241,78 @@
                 ...totals
             };
 
-            state.meals.push(newMeal);
+            if (editId) {
+                const index = state.meals.findIndex(
+                    m => m.id === parseInt(editId)
+                );
+
+                if (index !== -1) {
+                    state.meals[index] = mealData;
+                }
+            } else {
+                state.meals.push(mealData);
+            }
+
+            cancelEditMeal();
+            saveData();
+        }
+        
+        function editMeal(id) {
+            const meal = state.meals.find(m => m.id === id);
+
+            if (!meal) return;
+
+            switchTab('meals');
+
+            document.getElementById('editMealId').value = meal.id;
+            document.getElementById('mealNameInput').value = meal.name;
+            document.getElementById('mealUnitInput').value = meal.unit;
+            document.getElementById('mealBaseQtyInput').value = meal.baseQty;
+
+            // Make a copy so editing the draft doesn't modify
+            // the saved meal until Update Meal is clicked
+            currentDraftIngredients = meal.ingredients.map(ing => ({
+                ...ing
+            }));
+
+            renderDraftIngredients();
+
+            document.getElementById('mealFormTitle').innerText =
+                "Edit Meal / Recipe";
+
+            document.getElementById('saveMealBtn').innerText =
+                "Update Meal";
+
+            document.getElementById('cancelEditMealBtn')
+                .classList.remove('hidden');
+
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
+        function cancelEditMeal() {
             document.getElementById('saveMealForm').reset();
+
+            document.getElementById('editMealId').value = "";
+
             document.getElementById('mealBaseQtyInput').value = '';
             document.getElementById('mealUnitInput').value = 'g';
+
             currentDraftIngredients = [];
             renderDraftIngredients();
-            saveData();
-            switchTab('today');
+
+            document.getElementById('mealFormTitle').innerText =
+                "Create Custom Meal / Recipe";
+
+            document.getElementById('saveMealBtn').innerText =
+                "Save Meal Recipe";
+
+            document.getElementById('cancelEditMealBtn')
+                .classList.add('hidden');
+
+            updateMealIngredientDropdown();
         }
 
         function deleteMeal(id) {
@@ -925,23 +1322,68 @@
             }
         }
 
-        // LOGGING FUNCTIONS
         function updateLogDropdown() {
             const type = document.getElementById('logType').value;
             const selectEl = document.getElementById('selectLogItem');
             const labelEl = document.getElementById('logSelectLabel');
 
+            const searchEl = document.getElementById('todayFoodSearch');
+            const categoryEl = document.getElementById('todayFoodCategory');
+            const filtersEl = document.getElementById('todayFoodFilters');
+
             if (type === 'food') {
                 labelEl.innerText = "Select Food";
-                selectEl.innerHTML = state.library.length === 0 ? 
-                    `<option value="">No foods available</option>` :
-                    state.library.map(f => `<option value="${f.id}">${f.name} (${f.calories} kcal / ${f.baseQty}${f.unit})</option>`).join('');
+
+                if (filtersEl) filtersEl.classList.remove('hidden');
+
+                const searchTerm = searchEl
+                    ? searchEl.value.trim().toLowerCase()
+                    : '';
+
+                const selectedCategory = categoryEl
+                    ? categoryEl.value
+                    : '';
+
+                const filteredFoods = state.library
+                    .filter(food => {
+                        const matchesSearch =
+                            !searchTerm ||
+                            (food.name || '').toLowerCase().includes(searchTerm);
+
+                        const matchesCategory =
+                            !selectedCategory ||
+                            food.category === selectedCategory;
+
+                        return matchesSearch && matchesCategory;
+                    })
+                    .sort((a, b) => a.name.localeCompare(b.name));
+
+                selectEl.innerHTML = filteredFoods.length === 0
+                    ? `<option value="">No matching foods</option>`
+                    : filteredFoods.map(f =>
+                        `<option value="${f.id}">
+                            ${f.name} (${f.calories} kcal / ${f.baseQty}${f.unit})
+                        </option>`
+                    ).join('');
+
             } else {
                 labelEl.innerText = "Select Meal";
-                selectEl.innerHTML = state.meals.length === 0 ? 
-                    `<option value="">No meals available</option>` :
-                    state.meals.map(m => `<option value="${m.id}">${m.name} (${Math.round(m.calories)} kcal / ${m.baseQty}${m.unit})</option>`).join('');
-            }
+
+                // Food filters don't apply when selecting a saved meal
+                if (filtersEl) filtersEl.classList.add('hidden');
+
+                    const sortedMeals = [...state.meals]
+                        .sort((a, b) => a.name.localeCompare(b.name));
+
+                    selectEl.innerHTML = sortedMeals.length === 0
+                        ? `<option value="">No meals available</option>`
+                        : sortedMeals.map(m =>
+                            `<option value="${m.id}">
+                                ${m.name} (${Math.round(m.calories)} kcal / ${m.baseQty}${m.unit})
+                            </option>`
+                        ).join('');
+            }       
+
             updatePortionLabel();
         }
 
@@ -980,7 +1422,7 @@
                 date: new Date().toISOString().split('T')[0]
             };
 
-            const keys = ['calories', 'protein', 'carbs', 'fiber', 'sugars', 'fats', 'satFat', 'transFat', 'polyFat', 'omega6', 'omega3', 'monoFat', 'cholesterol', 'sodium', 'potassium', 'calcium', 'iron', 'vitA', 'vitC', 'vitD', 'vitE', 'thiamine', 'riboflavin', 'niacin', 'vitB6', 'vitB12', 'folate', 'pantothenate', 'phosphorus', 'magnesium', 'zinc', 'selenium', 'copper', 'manganese', 'molybdenum', 'biotin'];
+            const keys = ['calories', 'protein', 'carbs', 'fiber', 'sugars', 'fats', 'satFat', 'transFat', 'polyFat', 'omega6', 'omega3', 'monoFat', 'cholesterol', 'sodium', 'potassium', 'calcium', 'iron', 'iodide', 'vitA', 'vitC', 'vitD', 'vitE', 'thiamine', 'riboflavin', 'niacin', 'vitB6', 'vitB12', 'folate', 'pantothenate', 'phosphorus', 'magnesium', 'zinc', 'selenium', 'copper', 'manganese', 'molybdenum', 'biotin'];
             keys.forEach(k => {
                 calculatedItem[k] = Math.round(((sourceItem[k] || 0) * multiplier) * 100) / 100;
             });
@@ -1061,10 +1503,12 @@
                         </div>
                         <button onclick="toggleExpand('${prefix}_vit_${item.id || item.logId}')" class="text-emerald-600 font-medium underline text-[10px]">Show more vitamins/minerals ▾</button>
                         <div id="${prefix}_vit_${item.id || item.logId}" class="hidden pt-1 grid grid-cols-2 gap-x-4 gap-y-1 text-gray-500">
+                            <div>Iodide: <span class="font-bold text-gray-700">${formatNutrient(item.iodide, 'iodide')}</span></div>
                             <div>Vitamin A: <span class="font-bold text-gray-700">${formatNutrient(item.vitA, 'vitA')}</span></div>
                             <div>Vitamin C: <span class="font-bold text-gray-700">${formatNutrient(item.vitC, 'vitC')}</span></div>
                             <div>Vitamin D: <span class="font-bold text-gray-700">${formatNutrient(item.vitD, 'vitD')}</span></div>
                             <div>Vitamin E: <span class="font-bold text-gray-700">${formatNutrient(item.vitE, 'vitE')}</span></div>
+                            <div>Vitamin K: <span class="font-bold text-gray-700">${formatNutrient(item.vitK, 'vitK')}</span></div>
                             <div>Thiamine: <span class="font-bold text-gray-700">${formatNutrient(item.thiamine, 'thiamine')}</span></div>
                             <div>Riboflavin: <span class="font-bold text-gray-700">${formatNutrient(item.riboflavin, 'riboflavin')}</span></div>
                             <div>Niacin: <span class="font-bold text-gray-700">${formatNutrient(item.niacin, 'niacin')}</span></div>
@@ -1101,46 +1545,128 @@
 
             document.getElementById('goalDisplay').innerText = state.goal || 2000;
             document.getElementById('goalProteinDisplay').innerText = state.goalProtein || 150;
-            document.getElementById('remainingDisplay').innerText = remaining;
+            document.getElementById('remainingDisplay').innerText =
+                remaining.toFixed(1);
             document.getElementById('progressBar').style.width = progress + '%';
             document.getElementById('sumProtein').innerText = totalProtein.toFixed(1) + 'g';
             document.getElementById('sumCarbs').innerText = totalCarbs.toFixed(1) + 'g';
             document.getElementById('sumFats').innerText = totalFats.toFixed(1) + 'g';
 
             updateLogDropdown();
-            const ingSelect = document.getElementById('mealIngredientSelect');
-            if (ingSelect) {
-                ingSelect.innerHTML = state.library.map(f => `<option value="${f.id}">${f.name} (per ${f.baseQty}${f.unit})</option>`).join('');
+            updateMealIngredientDropdown();
+
+            // Get Foods tab filters
+            const searchInput = document.getElementById('foodSearch');
+            const categoryInput = document.getElementById('foodCategoryFilter');
+
+            const searchTerm = searchInput
+                ? searchInput.value.trim().toLowerCase()
+                : '';
+
+            const selectedCategory = categoryInput
+                ? categoryInput.value
+                : '';
+
+            // Do not show the entire library by default
+            let filteredLibrary = [];
+
+            if (searchTerm || selectedCategory) {
+
+                filteredLibrary = state.library.filter(food => {
+
+                    const name = (food.name || '').toLowerCase();
+
+                    const matchesSearch =
+                        !searchTerm ||
+                        name.includes(searchTerm);
+
+                    const matchesCategory =
+                        !selectedCategory ||
+                        selectedCategory === 'all' ||
+                        food.category === selectedCategory;
+
+                    return matchesSearch && matchesCategory;
+                });
+
             }
 
-            // Render Food Library List
-            document.getElementById('libraryList').innerHTML = state.library.map(f => `
-                <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs space-y-2">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="font-bold text-gray-800 text-sm">${f.name}</p>
-                            <p class="text-gray-400">Per ${f.baseQty}${f.unit}: <span class="text-emerald-600 font-semibold">${f.calories} kcal</span> | P: ${f.protein}g | C: ${f.carbs}g | F: ${f.fats}g</p>
+            // Group filtered library items by category
+            const groupedLibrary = {};
+            CATEGORIES_ORDER.forEach(cat => groupedLibrary[cat] = []);
+
+            filteredLibrary.forEach(food => {
+                const cat =
+                    food.category && CATEGORIES_ORDER.includes(food.category)
+                        ? food.category
+                        : 'Other';
+
+            groupedLibrary[cat].push(food);
+            });
+
+            let libraryHTML = '';
+            CATEGORIES_ORDER.forEach(categoryName => {
+                const items = groupedLibrary[categoryName];
+                if (items && items.length > 0) {
+                    items.sort((a, b) => a.name.localeCompare(b.name));
+                    
+                    libraryHTML += `
+                        <div class="space-y-2">
+                            <h3 class="text-xs font-black uppercase text-emerald-700 tracking-wider border-b border-emerald-100 pb-1">${categoryName}</h3>
+                            <div class="space-y-2">
+                                ${items.map(f => `
+                                    <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs space-y-2">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <p class="font-bold text-gray-800 text-sm">${f.name}</p>
+                                                <p class="text-gray-400">Per ${f.baseQty}${f.unit}: <span class="text-emerald-600 font-semibold">${f.calories} kcal</span> \vert{} P:${f.protein}g | C: ${f.carbs}g \vert{} F:${f.fats}g</p>
+                                            </div>
+                                            <div class="flex items-center space-x-1">
+                                                <button onclick="duplicateLibraryItem(${f.id})" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-semibold px-2 py-1 rounded-lg">Duplicate</button>
+                                                <button onclick="editLibraryItem(${f.id})" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold px-2 py-1 rounded-lg">Edit</button>
+                                                <button onclick="deleteLibraryItem(${f.id})" class="text-gray-300 hover:text-red-500 font-bold text-base px-2">×</button>
+                                            </div>
+                                        </div>
+                                        ${renderMacroDetailsHTML(f, 'lib')}
+                                    </div>
+                                `).join('')}
+                            </div>
                         </div>
-                        <div class="flex items-center space-x-1">
-                            <button onclick="editLibraryItem(${f.id})" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold px-2 py-1 rounded-lg">Edit</button>
-                            <button onclick="deleteLibraryItem(${f.id})" class="text-gray-300 hover:text-red-500 font-bold text-base px-2">×</button>
-                        </div>
-                    </div>
-                    ${renderMacroDetailsHTML(f, 'lib')}
-                </div>
-            `).join('');
+                    `;
+                }
+            });
+
+            document.getElementById('libraryList').innerHTML =
+                libraryHTML ||
+                `<p class="text-xs text-gray-400 text-center py-4">
+                    Search for a food or select a category above.
+                </p>`;
 
             // Render Saved Meals List
-            document.getElementById('mealsList').innerHTML = state.meals.length === 0 ? 
+            const sortedMeals = [...state.meals].sort((a, b) => a.name.localeCompare(b.name));
+            document.getElementById('mealsList').innerHTML = sortedMeals.length === 0 ? 
                 `<p class="text-xs text-gray-400 text-center py-2">No custom meals saved yet.</p>` :
-                state.meals.map(m => `
+                sortedMeals.map(m => `
                     <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs space-y-2">
                         <div class="flex justify-between items-start">
                             <div>
                                 <p class="font-bold text-gray-800 text-sm">${m.name}</p>
                                 <p class="text-gray-400">Total Batch (${m.baseQty}${m.unit}): <span class="text-emerald-600 font-semibold">${Math.round(m.calories)} kcal</span> | P: ${m.protein.toFixed(1)}g | C: ${m.carbs.toFixed(1)}g | F: ${m.fats.toFixed(1)}g</p>
                             </div>
-                            <button onclick="deleteMeal(${m.id})" class="text-gray-300 hover:text-red-500 font-bold text-base px-2">×</button>
+                            <div class="flex items-center space-x-2">
+
+                                <button
+                                    onclick="editMeal(${m.id})"
+                                    class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold px-2 py-1 rounded-lg">
+                                    Edit
+                                </button>
+
+                                <button
+                                    onclick="deleteMeal(${m.id})"
+                                    class="text-gray-300 hover:text-red-500 font-bold text-base px-2">
+                                    ×
+                                </button>
+
+                            </div>
                         </div>
                         ${renderMacroDetailsHTML(m, 'meal')}
                     </div>
