@@ -843,92 +843,66 @@
             }
         }
 
+        // Each nutrient remembers the units in which its current value was entered.
+        const nutrientKeys = Object.keys(CANADIAN_DV);
+        const nutrientUnits = {
+            potassium:'mg', calcium:'mg', iron:'mg', iodide:'ug', vitA:'ug', vitC:'mg',
+            vitD:'ug', vitE:'mg', vitK:'ug', thiamine:'mg', riboflavin:'mg',
+            niacin:'mg', vitB6:'mg', vitB12:'ug', folate:'ug', pantothenate:'mg',
+            phosphorus:'mg', magnesium:'mg', zinc:'mg', selenium:'ug', copper:'mg',
+            manganese:'mg', molybdenum:'ug', biotin:'ug'
+        };
+        function nutrientInput(k) {
+            return document.getElementById('new' + k.charAt(0).toUpperCase() + k.slice(1));
+        }
+        function refreshNutrientLabels() {
+            nutrientKeys.forEach(k => {
+                const el = nutrientInput(k);
+                const lbl = document.getElementById('lbl' + k.charAt(0).toUpperCase() + k.slice(1));
+                if (!el || !lbl) return;
+                const mode = el.dataset.entryMode || 'absolute';
+                const name = k.replace(/([A-Z])/g, ' $1').trim();
+                lbl.textContent = name + (mode === 'percent' ? ' (% DV)' : ` (${nutrientUnits[k]})`);
+            });
+        }
         function setVitInputMode(mode) {
             vitInputMode = mode;
-
             const btnAbs = document.getElementById('btnModeAbs');
             const btnPct = document.getElementById('btnModePct');
-            const indicator = document.getElementById('vitModeIndicator');
-
-            const keys = [
-                'Potassium', 'Calcium', 'Iron', 'Iodide',
-                'VitA', 'VitC', 'VitD', 'VitE', 'VitK',
-                'Thiamine', 'Riboflavin', 'Niacin',
-                'VitB6', 'VitB12', 'Folate', 'Pantothenate',
-                'Phosphorus', 'Magnesium', 'Zinc',
-                'Selenium', 'Copper', 'Manganese',
-                'Molybdenum', 'Biotin'
-            ];
-
-            const unitsMap = {
-                Potassium: 'mg',
-                Calcium: 'mg',
-                Iron: 'mg',
-                Iodide: 'ug',
-                VitA: 'ug',
-                VitC: 'mg',
-                VitD: 'ug',
-                VitE: 'mg',
-                VitK: 'ug',
-                Thiamine: 'mg',
-                Riboflavin: 'mg',
-                Niacin: 'mg',
-                VitB6: 'mg',
-                VitB12: 'ug',
-                Folate: 'ug',
-                Pantothenate: 'mg',
-                Phosphorus: 'mg',
-                Magnesium: 'mg',
-                Zinc: 'mg',
-                Selenium: 'ug',
-                Copper: 'mg',
-                Manganese: 'mg',
-                Molybdenum: 'ug',
-                Biotin: 'ug'
-            };
-
-            if (mode === 'percent') {
-
-                btnPct.className =
-                "text-xs px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-semibold transition";
-
-                btnAbs.className =
-                    "text-xs px-2.5 py-1 rounded-lg bg-white text-emerald-700 font-semibold border border-emerald-200 transition";
-
-                indicator.innerText = "Input: % Daily Value";
-
-                // ONLY change labels — DO NOT change existing values
-                keys.forEach(k => {
-                    const lbl = document.getElementById('lbl' + k);
-
-                    if (lbl) {
-                        lbl.innerText =
-                            k.replace(/([A-Z])/g, ' $1').trim() + ' (% DV)';
-                    }
-                });
-
-            } else {
-
-                btnAbs.className =
-                    "text-xs px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-semibold transition";
-
-                btnPct.className =
-                    "text-xs px-2.5 py-1 rounded-lg bg-white text-emerald-700 font-semibold border border-emerald-200 transition";
-
-                indicator.innerText = "Input: mg/ug";
-
-                // ONLY change labels — DO NOT change existing values
-                keys.forEach(k => {
-                    const lbl = document.getElementById('lbl' + k);
-
-                    if (lbl) {
-                        lbl.innerText =
-                            k.replace(/([A-Z])/g, ' $1').trim()
-                            + ` (${unitsMap[k]})`;
-                    }
-                });
-            }
+            const active = 'text-xs px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-semibold transition';
+            const inactive = 'text-xs px-2.5 py-1 rounded-lg bg-white text-emerald-700 font-semibold border border-emerald-200 transition';
+            btnAbs.className = mode === 'absolute' ? active : inactive;
+            btnPct.className = mode === 'percent' ? active : inactive;
+            document.getElementById('vitModeIndicator').textContent =
+                mode === 'percent' ? 'New entries: % Daily Value' : 'New entries: mg/ug';
+            // Blank/zero fields adopt the selected input mode. Existing nonzero
+            // values retain their original mode until the user edits that field.
+            nutrientKeys.forEach(k => {
+                const el = nutrientInput(k);
+                if (el && (!el.value || Number(el.value) === 0)) el.dataset.entryMode = mode;
+            });
+            refreshNutrientLabels();
         }
+        function resetNutrientEntryModes() {
+            nutrientKeys.forEach(k => {
+                const el = nutrientInput(k);
+                if (el) el.dataset.entryMode = 'absolute';
+            });
+            setVitInputMode('absolute');
+            refreshNutrientLabels();
+        }
+        // Editing a nutrient uses the selected mode for THAT nutrient only.
+        document.querySelectorAll('#saveFoodForm input').forEach(el => {
+            if (!el.id || !el.id.startsWith('new')) return;
+            const k = el.id.slice(3);
+            const key = k.charAt(0).toLowerCase() + k.slice(1);
+            if (!nutrientKeys.includes(key)) return;
+            el.dataset.entryMode = 'absolute';
+            el.addEventListener('input', () => {
+                el.dataset.entryMode = vitInputMode;
+                refreshNutrientLabels();
+            });
+        });
 
         function setLibDisplayMode(mode) {
             state.vitDisplayMode = mode;
@@ -946,13 +920,11 @@
             let parsedNutrients = {};
 
             keys.forEach(k => {
-                const rawVal = parseFloat(document.getElementById('new' + k.charAt(0).toUpperCase() + k.slice(1)).value) || 0;
-                if (vitInputMode === 'percent') {
-                    const dv = CANADIAN_DV[k];
-                    parsedNutrients[k] = dv ? (rawVal / 100) * dv : 0;
-                } else {
-                    parsedNutrients[k] = rawVal;
-                }
+                const el = nutrientInput(k);
+                const rawVal = parseFloat(el.value) || 0;
+                const mode = el.dataset.entryMode || 'absolute';
+                parsedNutrients[k] = mode === 'percent'
+                    ? (rawVal / 100) * CANADIAN_DV[k] : rawVal;
             });
 
             const foodData = {
@@ -989,10 +961,7 @@
                 document.getElementById('saveFoodForm').reset();
                 document.getElementById('newBaseQty').value = 100;
                 document.getElementById('newUnit').value = 'g';
-            }
-
-            if (vitInputMode === 'percent') {
-                setVitInputMode('absolute');
+                resetNutrientEntryModes();
             }
 
             saveData();
@@ -1043,9 +1012,10 @@
             keys.forEach(k => {
                 const fieldId = 'new' + k.charAt(0).toUpperCase() + k.slice(1);
                 const el = document.getElementById(fieldId);
-                if (el) el.value = food[k] || 0;
+                if (el) { el.value = food[k] || 0; el.dataset.entryMode = 'absolute'; }
             });
 
+            refreshNutrientLabels();
             document.getElementById('foodFormTitle').innerText = "Edit Food Item";
             document.getElementById('saveFoodBtn').innerText = "Update Food";
             document.getElementById('cancelEditFoodBtn').classList.remove('hidden');
@@ -1057,7 +1027,7 @@
             document.getElementById('editFoodId').value = "";
             document.getElementById('newBaseQty').value = 100;
             document.getElementById('newUnit').value = 'g';
-            if (vitInputMode === 'percent') setVitInputMode('absolute');
+            resetNutrientEntryModes();
             document.getElementById('foodFormTitle').innerText = "Create / Save New Food";
             document.getElementById('saveFoodBtn').innerText = "Save to Food Library";
             document.getElementById('cancelEditFoodBtn').classList.add('hidden');
